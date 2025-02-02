@@ -18,7 +18,7 @@ interface StoryState {
     clearError: () => void;
 }
 
-export const useStoryStore = create<StoryState>((set, get) => ({
+export const useStoryStore = create<StoryState>((set, _get) => ({
     stories: [],
     currentStory: null,
     loading: false,
