@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { db } from '../services/database';
-import type { Chapter } from '../types/story';
+import { db } from '../../../services/database';
+import type { Chapter } from '../../../types/story';
 
 interface ChapterState {
     chapters: Chapter[];
@@ -67,14 +67,16 @@ export const useChapterStore = create<ChapterState>((set, _get) => ({
     createChapter: async (chapterData) => {
         set({ loading: true, error: null });
         try {
-            // Get the highest order number for this story
-            const highestChapter = await db.chapters
+            // Get all chapters for this story and find the highest order
+            const storyChapters = await db.chapters
                 .where('storyId')
                 .equals(chapterData.storyId)
-                .reverse()
-                .first();
+                .toArray();
 
-            const nextOrder = highestChapter ? highestChapter.order + 1 : 1;
+            const nextOrder = storyChapters.length === 0
+                ? 1
+                : Math.max(...storyChapters.map(chapter => chapter.order)) + 1;
+
             const chapterId = crypto.randomUUID();
 
             await db.chapters.add({
@@ -89,7 +91,7 @@ export const useChapterStore = create<ChapterState>((set, _get) => ({
             if (!newChapter) throw new Error('Failed to create chapter');
 
             set(state => ({
-                chapters: [...state.chapters, newChapter],
+                chapters: [...state.chapters, newChapter].sort((a, b) => a.order - b.order),
                 currentChapter: newChapter,
                 loading: false
             }));

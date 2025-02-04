@@ -7,17 +7,18 @@ import {
     Sliders,
     BookOpen
 } from "lucide-react";
-import { Button } from "./components/ui/button";
-import { ThemeToggle } from "./components/theme-toggle";
-import { useStoryStore } from "./stores/useStoryStore";
+import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { useStoryStore } from "@/features/stories/stores/useStoryStore";
 import { useEffect } from "react";
-import { cn } from "./lib/utils";
+import { cn } from "@/lib/utils";
 import { useLocation } from "react-router";
 
-export default function Dashboard() {
+export default function StoryDashboard() {
     const { storyId } = useParams();
     const { currentStory, getStory } = useStoryStore();
     const location = useLocation();
+
 
     useEffect(() => {
         if (storyId) {

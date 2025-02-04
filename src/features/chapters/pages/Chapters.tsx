@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ChapterCard } from "@/components/chapter-card";
-import { useChapterStore } from "@/stores/useChapterStore";
+import { ChapterCard } from "@/features/chapters/components/ChapterCard";
+import { useChapterStore } from "@/features/chapters/stores/useChapterStore";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
     Dialog,
@@ -48,9 +48,9 @@ export default function Chapters() {
         if (!storyId) return;
 
         try {
-            const nextOrder = chapters.length > 0
-                ? Math.max(...chapters.map(c => c.order)) + 1
-                : 1;
+            const nextOrder = chapters.length === 0
+                ? 1
+                : Math.max(...chapters.map(chapter => chapter.order ?? 0)) + 1;
 
             await createChapter({
                 storyId,
@@ -159,13 +159,15 @@ export default function Chapters() {
                     </div>
                 ) : (
                     <div className="space-y-2">
-                        {chapters.map((chapter) => (
-                            <ChapterCard
-                                key={chapter.id}
-                                chapter={chapter}
-                                storyId={storyId}
-                            />
-                        ))}
+                        {chapters
+                            .sort((a, b) => a.order - b.order)
+                            .map((chapter) => (
+                                <ChapterCard
+                                    key={chapter.id}
+                                    chapter={chapter}
+                                    storyId={storyId}
+                                />
+                            ))}
                     </div>
                 )}
             </ScrollArea>

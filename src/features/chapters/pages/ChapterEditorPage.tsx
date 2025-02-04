@@ -1,15 +1,11 @@
 import { useEffect } from "react";
-import { useParams, useLocation } from "react-router";
-import { useStoryStore } from "@/stores/useStoryStore";
-import { useChapterStore } from "@/stores/useChapterStore";
-import { StoryEditor } from "@/components/StoryEditor";
+import { useParams } from "react-router";
+import { useStoryStore } from "@/features/stories/stores/useStoryStore";
+import { useChapterStore } from "@/features/chapters/stores/useChapterStore";
+import { StoryEditor } from "@/features/chapters/components/StoryEditor";
 
-export default function ChapterData() {
-    const { storyId } = useParams();
-    const location = useLocation();
-    const searchParams = new URLSearchParams(location.search);
-    const chapterId = searchParams.get("id");
-
+export default function ChapterEditorPage() {
+    const { storyId, chapterId } = useParams<{ storyId: string; chapterId: string }>();
     const { getStory, currentStory } = useStoryStore();
     const { currentChapter, getChapter } = useChapterStore();
 
