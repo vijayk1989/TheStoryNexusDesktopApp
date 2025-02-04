@@ -7,6 +7,8 @@ import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import Toolbar from './Toolbar';
 import WordCountPlugin from './WordCountPlugin';
 import UnderlinePlugin from './UnderlinePlugin';
+import SaveChapterButton from './SaveChapterButton';
+import LoadChapterContent from './LoadChapterContent';
 import { HelloWorldNode } from './HelloWorldNode';
 
 const initialConfig = {
@@ -37,6 +39,10 @@ export default function Editor() {
                 <HistoryPlugin />
                 <WordCountPlugin />
                 <UnderlinePlugin />
+                <LoadChapterContent />
+                <div className="p-2">
+                    <SaveChapterButton />
+                </div>
             </div>
         </LexicalComposer>
     );

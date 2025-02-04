@@ -3,7 +3,7 @@ import { MainEditor } from "./MainEditor";
 import { StoryOutline } from "./StoryOutline";
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "./button";
+import { Button } from "./ui/button";
 
 export function StoryEditor() {
     const [worldDataOpen, setWorldDataOpen] = useState(true);

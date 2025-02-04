@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
-import { Button } from "./button";
+import { Button } from "./ui/button";
 import { Pencil, Trash2, Wand2, PenLine, ChevronUp, ChevronDown } from "lucide-react";
 import { useChapterStore } from "../stores/useChapterStore";
 import type { Chapter } from "../types/story";
 import { Link } from "react-router";
-import { Textarea } from "./textarea";
+import { Textarea } from "./ui/textarea";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -14,7 +14,7 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-} from "./alert-dialog";
+} from "./ui/alert-dialog";
 import {
     Dialog,
     DialogContent,
@@ -22,18 +22,18 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from "./dialog";
-import { Label } from "./label";
-import { Input } from "./input";
+} from "./ui/dialog";
+import { Label } from "./ui/label";
+import { Input } from "./ui/input";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "./select";
+} from "./ui/select";
 import { useForm } from "react-hook-form";
-import { Card, CardContent, CardHeader } from "./card";
+import { Card, CardContent, CardHeader } from "./ui/card";
 import { Bounce, toast } from 'react-toastify';
 
 interface ChapterCardProps {

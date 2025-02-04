@@ -7,7 +7,7 @@ import {
     Sliders,
     BookOpen
 } from "lucide-react";
-import { Button } from "./components/button";
+import { Button } from "./components/ui/button";
 import { ThemeToggle } from "./components/theme-toggle";
 import { useStoryStore } from "./stores/useStoryStore";
 import { useEffect } from "react";

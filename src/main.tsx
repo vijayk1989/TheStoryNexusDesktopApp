@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router";
 import Home from "./routes/Home.tsx";
 import Dashboard from "./dashboard.tsx";
-import Story from "./routes/Story.tsx";
+import ChapterData from "./routes/ChapterData.tsx";
 import About from "./routes/About.tsx";
 import Chapters from "./routes/dashboard/Chapters.tsx";
 import Prompts from "./routes/dashboard/Prompts.tsx";
@@ -28,10 +28,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 					<Route path="/dashboard" element={<Dashboard />}>
 						<Route path=":storyId" element={<Navigate to="chapters" replace />} />
 						<Route path=":storyId/chapters" element={<Chapters />} />
-						<Route path=":storyId/chapters/write" element={<Story />} />
+						<Route path=":storyId/chapters/write" element={<ChapterData />} />
 						<Route path=":storyId/prompts" element={<Prompts />} />
 						<Route path=":storyId/chats" element={<Chats />} />
 						<Route path=":storyId/settings" element={<DefaultSettings />} />
+
 						<Route path="ai-settings" element={<AISettings />} />
 					</Route>
 				</Routes>

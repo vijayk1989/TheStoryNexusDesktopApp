@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Story } from "@/types/story";
 import { useStoryStore } from "@/stores/useStoryStore";
-import { Button } from "./button";
+import { Button } from "./ui/button";
 import {
     Dialog,
     DialogContent,
@@ -9,10 +9,10 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from "./dialog";
-import { Input } from "./input";
-import { Label } from "./label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select";
+} from "./ui/dialog";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 interface EditStoryDialogProps {
     story: Story | null;

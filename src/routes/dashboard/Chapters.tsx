@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { Plus } from "lucide-react";
-import { Button } from "@/components/button";
+import { Button } from "@/components/ui/button";
 import { ChapterCard } from "@/components/chapter-card";
 import { useChapterStore } from "@/stores/useChapterStore";
-import { ScrollArea } from "@/components/scroll-area";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
     Dialog,
     DialogContent,
@@ -13,16 +13,16 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-} from "@/components/dialog";
-import { Label } from "@/components/label";
-import { Input } from "@/components/input";
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/select";
+} from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { toast } from 'react-toastify';
 

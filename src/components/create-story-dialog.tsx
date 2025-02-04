@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useStoryStore } from "@/stores/useStoryStore";
-import { Button } from "./button";
+import { Button } from "./ui/button";
 import {
     Dialog,
     DialogContent,
@@ -9,10 +9,10 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-} from "./dialog";
-import { Input } from "./input";
-import { Label } from "./label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select";
+} from "./ui/dialog";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { PlusCircle } from "lucide-react";
 
 export function CreateStoryDialog() {
