@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
-import { Button } from "./ui/button";
+import { Button } from "../../../components/ui/button";
 import { Pencil, Trash2, Wand2, PenLine, ChevronUp, ChevronDown } from "lucide-react";
 import { useChapterStore } from "../stores/useChapterStore";
-import type { Chapter } from "../types/story";
-import { Link } from "react-router";
-import { Textarea } from "./ui/textarea";
+import type { Chapter } from "../../../types/story";
+import { Link, useNavigate } from "react-router";
+import { Textarea } from "../../../components/ui/textarea";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -14,7 +14,7 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-} from "./ui/alert-dialog";
+} from "../../../components/ui/alert-dialog";
 import {
     Dialog,
     DialogContent,
@@ -22,19 +22,20 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from "./ui/dialog";
-import { Label } from "./ui/label";
-import { Input } from "./ui/input";
+} from "../../../components/ui/dialog";
+import { Label } from "../../../components/ui/label";
+import { Input } from "../../../components/ui/input";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "./ui/select";
+} from "../../../components/ui/select";
 import { useForm } from "react-hook-form";
-import { Card, CardContent, CardHeader } from "./ui/card";
+import { Card, CardContent, CardHeader } from "../../../components/ui/card";
 import { Bounce, toast } from 'react-toastify';
+import { useChapterContext } from '../context/ChapterContext';
 
 interface ChapterCardProps {
     chapter: Chapter;
@@ -66,6 +67,8 @@ export function ChapterCard({ chapter, storyId }: ChapterCardProps) {
             povType: chapter.povType,
         },
     });
+    const { setCurrentChapterId } = useChapterContext();
+    const navigate = useNavigate();
 
     useEffect(() => {
         if (summary !== chapter.summary) {
@@ -127,6 +130,11 @@ export function ChapterCard({ chapter, storyId }: ChapterCardProps) {
         setIsExpanded(prev => !prev);
     };
 
+    const handleWriteClick = () => {
+        setCurrentChapterId(chapter.id);
+        navigate(`/dashboard/${storyId}/chapters/${chapter.id}`);
+    };
+
     const cardContent = useMemo(() => (
         <CardContent className="p-4">
             <div className="space-y-4" onClick={e => e.stopPropagation()}>
@@ -180,11 +188,9 @@ export function ChapterCard({ chapter, storyId }: ChapterCardProps) {
                             <Button variant="ghost" size="sm" onClick={() => setShowEditDialog(true)}>
                                 <Pencil className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="sm" asChild>
-                                <Link to={`/dashboard/${storyId}/chapters/write?id=${chapter.id}`}>
-                                    <PenLine className="h-4 w-4 mr-2" />
-                                    Write
-                                </Link>
+                            <Button variant="ghost" size="sm" onClick={handleWriteClick}>
+                                <PenLine className="h-4 w-4 mr-2" />
+                                Write
                             </Button>
                             <Button variant="ghost" size="sm" onClick={() => setShowDeleteDialog(true)}>
                                 <Trash2 className="h-4 w-4" />

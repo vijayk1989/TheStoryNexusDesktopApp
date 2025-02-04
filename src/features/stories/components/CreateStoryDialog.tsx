@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
-import { Story } from "@/types/story";
-import { useStoryStore } from "@/stores/useStoryStore";
-import { Button } from "./ui/button";
+import { useState } from "react";
+import { useStoryStore } from "@/features/stories/stores/useStoryStore";
+import { Button } from "@/components/ui/button";
 import {
     Dialog,
     DialogContent,
@@ -9,65 +8,63 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from "./ui/dialog";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PlusCircle } from "lucide-react";
 
-interface EditStoryDialogProps {
-    story: Story | null;
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-}
 
-export function EditStoryDialog({ story, open, onOpenChange }: EditStoryDialogProps) {
+export function CreateStoryDialog() {
+    const [open, setOpen] = useState(false);
     const [title, setTitle] = useState("");
     const [author, setAuthor] = useState("");
     const [language, setLanguage] = useState("English");
     const [synopsis, setSynopsis] = useState("");
-    const updateStory = useStoryStore((state) => state.updateStory);
-
-    useEffect(() => {
-        if (story) {
-            setTitle(story.title);
-            setAuthor(story.author);
-            setLanguage(story.language);
-            setSynopsis(story.synopsis || "");
-        }
-    }, [story]);
+    const createStory = useStoryStore((state) => state.createStory);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!story) return;
-
         try {
-            await updateStory(story.id, {
+            await createStory({
                 title,
                 author,
                 language,
                 synopsis,
             });
-            onOpenChange(false);
+            setOpen(false);
+            // Reset form
+            setTitle("");
+            setAuthor("");
+            setLanguage("English");
+            setSynopsis("");
         } catch (error) {
-            console.error("Failed to update story:", error);
+            console.error("Failed to create story:", error);
         }
     };
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button size="lg" className="w-64">
+                    <PlusCircle className="mr-2 h-5 w-5" />
+                    Create New Story
+                </Button>
+            </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
                 <form onSubmit={handleSubmit}>
                     <DialogHeader>
-                        <DialogTitle>Edit Story</DialogTitle>
+                        <DialogTitle>Create New Story</DialogTitle>
                         <DialogDescription>
-                            Make changes to your story details here.
+                            Fill in the details for your new story. You can edit these later.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="edit-title">Title</Label>
+                            <Label htmlFor="title">Title</Label>
                             <Input
-                                id="edit-title"
+                                id="title"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                                 placeholder="Enter story title"
@@ -75,9 +72,9 @@ export function EditStoryDialog({ story, open, onOpenChange }: EditStoryDialogPr
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="edit-author">Author</Label>
+                            <Label htmlFor="author">Author</Label>
                             <Input
-                                id="edit-author"
+                                id="author"
                                 value={author}
                                 onChange={(e) => setAuthor(e.target.value)}
                                 placeholder="Enter author name"
@@ -85,7 +82,7 @@ export function EditStoryDialog({ story, open, onOpenChange }: EditStoryDialogPr
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="edit-language">Language</Label>
+                            <Label htmlFor="language">Language</Label>
                             <Select value={language} onValueChange={setLanguage}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select language" />
@@ -101,9 +98,9 @@ export function EditStoryDialog({ story, open, onOpenChange }: EditStoryDialogPr
                             </Select>
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="edit-synopsis">Synopsis</Label>
+                            <Label htmlFor="synopsis">Synopsis</Label>
                             <Input
-                                id="edit-synopsis"
+                                id="synopsis"
                                 value={synopsis}
                                 onChange={(e) => setSynopsis(e.target.value)}
                                 placeholder="Enter a brief synopsis (optional)"
@@ -111,7 +108,7 @@ export function EditStoryDialog({ story, open, onOpenChange }: EditStoryDialogPr
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button type="submit">Save Changes</Button>
+                        <Button type="submit">Create Story</Button>
                     </DialogFooter>
                 </form>
             </DialogContent>

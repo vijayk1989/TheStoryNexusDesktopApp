@@ -1,7 +1,7 @@
 //// src/components/lexical-editor/LoadChapterContent.tsx
 import React, { useEffect, useState } from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { useChapterStore } from '@/stores/useChapterStore';
+import { useChapterStore } from '@/features/chapters/stores/useChapterStore';
 
 export default function LoadChapterContent() {
     const [editor] = useLexicalComposerContext();

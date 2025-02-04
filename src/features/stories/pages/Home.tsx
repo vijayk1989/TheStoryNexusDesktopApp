@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { useStoryStore } from "@/stores/useStoryStore";
-import { CreateStoryDialog } from "@/components/create-story-dialog";
-import { EditStoryDialog } from "@/components/edit-story-dialog";
-import { StoryCard } from "@/components/story-card";
+import { useStoryStore } from "@/features/stories/stores/useStoryStore";
+import { CreateStoryDialog } from "@/features/stories/components/CreateStoryDialog";
+import { EditStoryDialog } from "@/features/stories/components/EditStoryDialog";
+import { StoryCard } from "@/features/stories/components/StoryCard";
 import type { Story } from "@/types/story";
+
 
 export default function Home() {
     const { stories, fetchStories } = useStoryStore();

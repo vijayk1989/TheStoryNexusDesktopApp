@@ -25,16 +25,6 @@ export interface Chapter extends BaseEntity {
     povType?: 'First Person' | 'Third Person Limited' | 'Third Person Omniscient';
 }
 
-// Complex types for JSON data
-export interface ChapterContent {
-    blocks: Array<{
-        id: string;
-        type: 'paragraph' | 'dialogue' | 'action' | 'description';
-        content: string;
-        metadata?: Record<string, unknown>;
-    }>;
-}
-
 export interface ChapterOutline {
     beats: Array<{
         id: string;

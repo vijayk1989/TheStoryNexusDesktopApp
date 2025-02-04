@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { Button } from '@/components/ui/button';
-import { useChapterStore } from '@/stores/useChapterStore';
+import { useChapterStore } from '@/features/chapters/stores/useChapterStore';
 
 export default function SaveChapterButton() {
     const [editor] = useLexicalComposerContext();

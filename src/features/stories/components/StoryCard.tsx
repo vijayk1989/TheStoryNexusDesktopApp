@@ -1,9 +1,9 @@
 import { Story } from "@/types/story";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
-import { Button } from "./ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../../components/ui/card";
+import { Button } from "../../../components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router";
-import { useStoryStore } from "@/stores/useStoryStore";
+import { useStoryStore } from "@/features/stories/stores/useStoryStore";
 
 interface StoryCardProps {
     story: Story;

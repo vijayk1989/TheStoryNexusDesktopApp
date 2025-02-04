@@ -1,9 +1,9 @@
 import { WorldDataList } from "./WorldDataList";
-import { MainEditor } from "./MainEditor";
 import { StoryOutline } from "./StoryOutline";
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
+import Editor from "@/components/lexical-editor/Editor";
 
 export function StoryEditor() {
     const [worldDataOpen, setWorldDataOpen] = useState(true);
@@ -45,7 +45,10 @@ export function StoryEditor() {
 
             {/* Main Editor Area */}
             <div className="flex-1">
-                <MainEditor />
+                <div className="h-full flex flex-col">
+                    <h1>Editor</h1>
+                    <Editor />
+                </div>
             </div>
 
             {/* Story Outline Sidebar */}
