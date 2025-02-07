@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { toast } from 'react-toastify';
+import { useStoryContext } from "@/features/stories/context/StoryContext";
 
 interface CreateChapterForm {
     title: string;
@@ -34,15 +35,17 @@ interface CreateChapterForm {
 
 export default function Chapters() {
     const { storyId } = useParams();
+    const { setCurrentStoryId } = useStoryContext();
     const { chapters, loading, error, fetchChapters, createChapter } = useChapterStore();
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const form = useForm<CreateChapterForm>();
 
     useEffect(() => {
         if (storyId) {
+            setCurrentStoryId(storyId);
             fetchChapters(storyId);
         }
-    }, [storyId, fetchChapters]);
+    }, [storyId, fetchChapters, setCurrentStoryId]);
 
     const handleCreateChapter = async (data: CreateChapterForm) => {
         if (!storyId) return;

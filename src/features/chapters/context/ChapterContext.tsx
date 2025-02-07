@@ -23,4 +23,4 @@ export function useChapterContext() {
         throw new Error('useChapterContext must be used within a ChapterProvider');
     }
     return context;
-} 
+}

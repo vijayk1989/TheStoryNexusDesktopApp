@@ -4,16 +4,19 @@ import { CreateStoryDialog } from "@/features/stories/components/CreateStoryDial
 import { EditStoryDialog } from "@/features/stories/components/EditStoryDialog";
 import { StoryCard } from "@/features/stories/components/StoryCard";
 import type { Story } from "@/types/story";
+import { useStoryContext } from "@/features/stories/context/StoryContext";
 
 
 export default function Home() {
     const { stories, fetchStories } = useStoryStore();
+    const { resetContext } = useStoryContext();
     const [editingStory, setEditingStory] = useState<Story | null>(null);
     const [editDialogOpen, setEditDialogOpen] = useState(false);
 
     useEffect(() => {
+        resetContext();
         fetchStories();
-    }, [fetchStories]);
+    }, [fetchStories, resetContext]);
 
     const handleEditStory = (story: Story) => {
         setEditingStory(story);

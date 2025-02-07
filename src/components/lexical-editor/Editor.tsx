@@ -10,7 +10,7 @@ import WordCountPlugin from './WordCountPlugin';
 import UnderlinePlugin from './UnderlinePlugin';
 import SaveChapterButton from './SaveChapterButton';
 import { HelloWorldNode } from './HelloWorldNode';
-import { useChapterContext } from '@/features/chapters/context/ChapterContext';
+import { useStoryContext } from '@/features/stories/context/StoryContext';
 import { useChapterStore } from '@/features/chapters/stores/useChapterStore';
 
 const initialConfig = {
@@ -53,7 +53,7 @@ export default function Editor() {
  */
 function EditorInternal() {
     const [editor] = useLexicalComposerContextCustom();
-    const { currentChapterId } = useChapterContext();
+    const { currentChapterId } = useStoryContext();
     const storedChapter = useChapterStore((state) => state.currentChapter);
     const [hasLoaded, setHasLoaded] = useState(false);
 

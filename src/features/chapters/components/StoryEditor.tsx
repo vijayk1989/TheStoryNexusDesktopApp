@@ -4,8 +4,10 @@ import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Editor from "@/components/lexical-editor/Editor";
+import { useStoryContext } from "@/features/stories/context/StoryContext";
 
 export function StoryEditor() {
+    const { currentStoryId, currentChapterId } = useStoryContext();
     const [worldDataOpen, setWorldDataOpen] = useState(true);
     const [outlineOpen, setOutlineOpen] = useState(true);
 

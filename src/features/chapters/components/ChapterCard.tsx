@@ -35,7 +35,7 @@ import {
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader } from "../../../components/ui/card";
 import { Bounce, toast } from 'react-toastify';
-import { useChapterContext } from '../context/ChapterContext';
+import { useStoryContext } from '@/features/stories/context/StoryContext';
 
 interface ChapterCardProps {
     chapter: Chapter;
@@ -67,7 +67,7 @@ export function ChapterCard({ chapter, storyId }: ChapterCardProps) {
             povType: chapter.povType,
         },
     });
-    const { setCurrentChapterId } = useChapterContext();
+    const { setCurrentChapterId } = useStoryContext();
     const navigate = useNavigate();
 
     useEffect(() => {

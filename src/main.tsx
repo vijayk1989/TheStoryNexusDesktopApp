@@ -14,44 +14,32 @@ import { MainLayout } from "./components/MainLayout.tsx";
 import "./index.css";
 import { ToastContainer } from 'react-toastify';
 import StoryDashboard from "./features/stories/pages/StoryDashboard.tsx";
-import { ChapterProvider } from '@/features/chapters/context/ChapterContext';
+import { StoryProvider } from '@/features/stories/context/StoryContext';
 
 // biome-ignore lint/style/noNonNullAssertion: <explanation>
 ReactDOM.createRoot(document.getElementById("root")!).render(
 	<React.StrictMode>
 		<ThemeProvider defaultTheme="dark" storageKey="app-theme">
-			<BrowserRouter>
-				<Routes>
-					<Route element={<MainLayout />}>
-						<Route path="/" element={<Home />} />
-						<Route path="/about" element={<About />} />
-					</Route>
-					<Route path="/dashboard" element={<StoryDashboard />}>
-						<Route path=":storyId" element={<Navigate to="chapters" replace />} />
-						<Route
-							path=":storyId/chapters"
-							element={
-								<ChapterProvider>
-									<Chapters />
-								</ChapterProvider>
-							}
-						/>
-						<Route
-							path=":storyId/chapters/:chapterId"
-							element={
-								<ChapterProvider>
-									<ChapterEditorPage />
-								</ChapterProvider>
-							}
-						/>
-						<Route path=":storyId/prompts" element={<Prompts />} />
-						<Route path=":storyId/chats" element={<Chats />} />
-						<Route path=":storyId/settings" element={<DefaultSettings />} />
-						<Route path="ai-settings" element={<AISettings />} />
-					</Route>
-				</Routes>
-				<ToastContainer />
-			</BrowserRouter>
+			<StoryProvider>
+				<BrowserRouter>
+					<Routes>
+						<Route element={<MainLayout />}>
+							<Route path="/" element={<Home />} />
+							<Route path="/about" element={<About />} />
+						</Route>
+						<Route path="/dashboard" element={<StoryDashboard />}>
+							<Route path=":storyId" element={<Navigate to="chapters" replace />} />
+							<Route path=":storyId/chapters" element={<Chapters />} />
+							<Route path=":storyId/chapters/:chapterId" element={<ChapterEditorPage />} />
+							<Route path=":storyId/prompts" element={<Prompts />} />
+							<Route path=":storyId/chats" element={<Chats />} />
+							<Route path=":storyId/settings" element={<DefaultSettings />} />
+							<Route path="ai-settings" element={<AISettings />} />
+						</Route>
+					</Routes>
+					<ToastContainer />
+				</BrowserRouter>
+			</StoryProvider>
 		</ThemeProvider>
 	</React.StrictMode>,
 );
