@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useRef } from 'react';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { LexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
@@ -12,6 +12,7 @@ import SaveChapterButton from './SaveChapterButton';
 import { HelloWorldNode } from './HelloWorldNode';
 import { useStoryContext } from '@/features/stories/context/StoryContext';
 import { useChapterStore } from '@/features/chapters/stores/useChapterStore';
+import FloatingTextFormatToolbarPlugin from './plugins/FloatingToolbar';
 
 const initialConfig = {
     namespace: 'MyEditor',
@@ -56,6 +57,10 @@ function EditorInternal() {
     const { currentChapterId } = useStoryContext();
     const storedChapter = useChapterStore((state) => state.currentChapter);
     const [hasLoaded, setHasLoaded] = useState(false);
+    const editorRef = useRef<HTMLDivElement>(null);
+
+    // State to handle link edit mode required by the toolbar plugin
+    const [isLinkEditMode, setIsLinkEditMode] = useState(false);
 
     useEffect(() => {
         if (
@@ -77,7 +82,7 @@ function EditorInternal() {
     }, [currentChapterId, storedChapter, editor, hasLoaded]);
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full" ref={editorRef}>
             <Toolbar />
             <RichTextPlugin
                 contentEditable={<ContentEditable className="flex-1 p-2" />}
@@ -91,6 +96,10 @@ function EditorInternal() {
             <HistoryPlugin />
             <WordCountPlugin />
             <UnderlinePlugin />
+            <FloatingTextFormatToolbarPlugin
+                setIsLinkEditMode={setIsLinkEditMode}
+                anchorElem={editorRef.current ?? document.body}
+            />
             <div className="p-2">
                 <SaveChapterButton />
             </div>
