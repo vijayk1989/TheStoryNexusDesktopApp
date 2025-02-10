@@ -2,7 +2,6 @@ import { defineConfig } from "vite";
 import path from "node:path";
 import electron from "vite-plugin-electron/simple";
 import react from "@vitejs/plugin-react";
-import { resolve } from "node:path";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -24,18 +23,44 @@ export default defineConfig({
 			renderer:
 				process.env.NODE_ENV === "test"
 					? // https://github.com/electron-vite/vite-plugin-electron-renderer/issues/78#issuecomment-2053600808
-						undefined
+					undefined
 					: {},
 		}),
 	],
 	resolve: {
 		alias: {
 			"@": path.resolve(__dirname, "./src"),
+			'@lexical-playground': path.resolve(__dirname, 'src/Lexical/lexical-playground/src'),
+			'shared': path.resolve(__dirname, 'src/Lexical/shared/src'),
+			// Add this to resolve Lexical packages properly
+			'lexical': path.resolve(__dirname, 'node_modules/lexical'),
+			'@lexical/react': path.resolve(__dirname, 'node_modules/@lexical/react'),
 		},
+	},
+	optimizeDeps: {
+		include: [
+			'prismjs',
+			'lexical',
+			'@lexical/react',
+			'@lexical/code',
+			'@lexical/rich-text',
+			'@lexical/list',
+			'@lexical/table',
+			'@lexical/file',
+			'@lexical/clipboard',
+			'@lexical/hashtag',
+			'@lexical/link',
+			'@lexical/overflow',
+			'@lexical/markdown',
+		],
+	},
+	define: {
+		__DEV__: process.env.NODE_ENV !== 'production',
 	},
 	build: {
 		rollupOptions: {
 			external: ["electron"], // This ensures electron modules are externalized
 		},
 	},
+
 });

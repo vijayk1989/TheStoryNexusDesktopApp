@@ -3,11 +3,9 @@ import { StoryOutline } from "./StoryOutline";
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Editor from "@/components/lexical-editor/Editor";
-import { useStoryContext } from "@/features/stories/context/StoryContext";
+import EmbeddedPlayground from "@/Lexical/lexical-playground/src/EmbeddedPlayground";
 
 export function StoryEditor() {
-    const { currentStoryId, currentChapterId } = useStoryContext();
     const [worldDataOpen, setWorldDataOpen] = useState(true);
     const [outlineOpen, setOutlineOpen] = useState(true);
 
@@ -48,8 +46,7 @@ export function StoryEditor() {
             {/* Main Editor Area */}
             <div className="flex-1">
                 <div className="h-full flex flex-col">
-                    <h1>Editor</h1>
-                    <Editor />
+                    <EmbeddedPlayground />
                 </div>
             </div>
 

@@ -2,7 +2,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@lexical-playground/*": ["src/Lexical/lexical-playground/src/*"],
+      "shared/*": ["src/Lexical/shared/src/*"]
     },
     "target": "ES2020",
     "useDefineForClassFields": true,
@@ -23,8 +25,10 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
-    "noImplicitAny": false
+    "noImplicitAny": false,
+
+    "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-  "include": ["src", "electron", "./test.global.d.ts"],
+  "include": ["src", "electron", "./test.global.d.ts", "src/types"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
