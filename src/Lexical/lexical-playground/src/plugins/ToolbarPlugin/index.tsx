@@ -7,16 +7,7 @@
  */
 
 import type { JSX } from 'react';
-
-import {
-  $isCodeNode,
-  CODE_LANGUAGE_FRIENDLY_NAME_MAP,
-  CODE_LANGUAGE_MAP,
-  getLanguageFriendlyName,
-} from '@lexical/code';
-import { $isLinkNode, TOGGLE_LINK_COMMAND } from '@lexical/link';
 import { $isListNode, ListNode } from '@lexical/list';
-import { INSERT_EMBED_COMMAND } from '@lexical/react/LexicalAutoEmbedPlugin';
 import { INSERT_HORIZONTAL_RULE_COMMAND } from '@lexical/react/LexicalHorizontalRuleNode';
 import { $isHeadingNode } from '@lexical/rich-text';
 import {
@@ -54,7 +45,6 @@ import {
   UNDO_COMMAND,
 } from 'lexical';
 import { Dispatch, useCallback, useEffect, useState } from 'react';
-import * as React from 'react';
 import { IS_APPLE } from 'shared/environment';
 
 import {
@@ -62,58 +52,39 @@ import {
   useToolbarState,
 } from '../../context/ToolbarContext';
 import useModal from '../../hooks/useModal';
-import catTypingGif from '../../images/cat-typing.gif';
-import { $createStickyNode } from '../../nodes/StickyNode';
-import DropDown, { DropDownItem } from '../../ui/DropDown';
-import DropdownColorPicker from '../../ui/DropdownColorPicker';
 import { getSelectedNode } from '../../utils/getSelectedNode';
-import { sanitizeUrl } from '../../utils/url';
-import { EmbedConfigs } from '../AutoEmbedPlugin';
-import { INSERT_COLLAPSIBLE_COMMAND } from '../CollapsiblePlugin';
-import { InsertEquationDialog } from '../EquationsPlugin';
 import {
-  INSERT_IMAGE_COMMAND,
   InsertImageDialog,
-  InsertImagePayload,
 } from '../ImagesPlugin';
 
-import { InsertInlineImageDialog } from '../InlineImagePlugin';
-import InsertLayoutDialog from '../LayoutPlugin/InsertLayoutDialog';
 import { INSERT_PAGE_BREAK } from '../PageBreakPlugin';
-import { InsertPollDialog } from '../PollPlugin';
 import { SHORTCUTS } from '../ShortcutsPlugin/shortcuts';
-import { InsertTableDialog } from '../TablePlugin';
 import FontSize from './fontSize';
 import {
   clearFormatting,
   formatBulletList,
   formatCheckList,
-  formatCode,
   formatHeading,
   formatNumberedList,
   formatParagraph,
   formatQuote,
 } from './utils';
 import { $createHelloWorldNode } from '../../nodes/HelloWorldNode';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
+import { ChevronDown, MoreHorizontal, Bold, Italic, Underline, Link, AlignLeft, AlignCenter, AlignRight, AlignJustify, Heading1, Heading2, Heading3, List, ListOrdered, CheckSquare, Quote, Code, Minus, SeparatorHorizontal, Image, Bot, Type, Superscript, Subscript, Strikethrough, X } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 const rootTypeToRootName = {
   root: 'Root',
   table: 'Table',
 };
-
-function getCodeLanguageOptions(): [string, string][] {
-  const options: [string, string][] = [];
-
-  for (const [lang, friendlyName] of Object.entries(
-    CODE_LANGUAGE_FRIENDLY_NAME_MAP,
-  )) {
-    options.push([lang, friendlyName]);
-  }
-
-  return options;
-}
-
-const CODE_LANGUAGE_OPTIONS = getCodeLanguageOptions();
 
 const FONT_FAMILY_OPTIONS: [string, string][] = [
   ['Arial', 'Arial'],
@@ -189,104 +160,101 @@ function BlockFormatDropDown({
   editor,
   blockType,
   rootType,
-  disabled = false,
+  disabled,
 }: {
   blockType: keyof typeof blockTypeToBlockName;
-  rootType: keyof typeof rootTypeToRootName;
+  rootType: string;
   editor: LexicalEditor;
-  disabled?: boolean;
+  disabled: boolean;
 }): JSX.Element {
   return (
-    <DropDown
-      disabled={disabled}
-      buttonClassName="toolbar-item block-controls"
-      buttonIconClassName={'icon block-type ' + blockType}
-      buttonLabel={blockTypeToBlockName[blockType]}
-      buttonAriaLabel="Formatting options for text style">
-      <DropDownItem
-        className={
-          'item wide ' + dropDownActiveClass(blockType === 'paragraph')
-        }
-        onClick={() => formatParagraph(editor)}>
-        <div className="icon-text-container">
-          <i className="icon paragraph" />
-          <span className="text">Normal</span>
-        </div>
-        <span className="shortcut">{SHORTCUTS.NORMAL}</span>
-      </DropDownItem>
-      <DropDownItem
-        className={'item wide ' + dropDownActiveClass(blockType === 'h1')}
-        onClick={() => formatHeading(editor, blockType, 'h1')}>
-        <div className="icon-text-container">
-          <i className="icon h1" />
-          <span className="text">Heading 1</span>
-        </div>
-        <span className="shortcut">{SHORTCUTS.HEADING1}</span>
-      </DropDownItem>
-      <DropDownItem
-        className={'item wide ' + dropDownActiveClass(blockType === 'h2')}
-        onClick={() => formatHeading(editor, blockType, 'h2')}>
-        <div className="icon-text-container">
-          <i className="icon h2" />
-          <span className="text">Heading 2</span>
-        </div>
-        <span className="shortcut">{SHORTCUTS.HEADING2}</span>
-      </DropDownItem>
-      <DropDownItem
-        className={'item wide ' + dropDownActiveClass(blockType === 'h3')}
-        onClick={() => formatHeading(editor, blockType, 'h3')}>
-        <div className="icon-text-container">
-          <i className="icon h3" />
-          <span className="text">Heading 3</span>
-        </div>
-        <span className="shortcut">{SHORTCUTS.HEADING3}</span>
-      </DropDownItem>
-      <DropDownItem
-        className={'item wide ' + dropDownActiveClass(blockType === 'bullet')}
-        onClick={() => formatBulletList(editor, blockType)}>
-        <div className="icon-text-container">
-          <i className="icon bullet-list" />
-          <span className="text">Bullet List</span>
-        </div>
-        <span className="shortcut">{SHORTCUTS.BULLET_LIST}</span>
-      </DropDownItem>
-      <DropDownItem
-        className={'item wide ' + dropDownActiveClass(blockType === 'number')}
-        onClick={() => formatNumberedList(editor, blockType)}>
-        <div className="icon-text-container">
-          <i className="icon numbered-list" />
-          <span className="text">Numbered List</span>
-        </div>
-        <span className="shortcut">{SHORTCUTS.NUMBERED_LIST}</span>
-      </DropDownItem>
-      <DropDownItem
-        className={'item wide ' + dropDownActiveClass(blockType === 'check')}
-        onClick={() => formatCheckList(editor, blockType)}>
-        <div className="icon-text-container">
-          <i className="icon check-list" />
-          <span className="text">Check List</span>
-        </div>
-        <span className="shortcut">{SHORTCUTS.CHECK_LIST}</span>
-      </DropDownItem>
-      <DropDownItem
-        className={'item wide ' + dropDownActiveClass(blockType === 'quote')}
-        onClick={() => formatQuote(editor, blockType)}>
-        <div className="icon-text-container">
-          <i className="icon quote" />
-          <span className="text">Quote</span>
-        </div>
-        <span className="shortcut">{SHORTCUTS.QUOTE}</span>
-      </DropDownItem>
-      <DropDownItem
-        className={'item wide ' + dropDownActiveClass(blockType === 'code')}
-        onClick={() => formatCode(editor, blockType)}>
-        <div className="icon-text-container">
-          <i className="icon code" />
-          <span className="text">Code Block</span>
-        </div>
-        <span className="shortcut">{SHORTCUTS.CODE_BLOCK}</span>
-      </DropDownItem>
-    </DropDown>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={disabled}
+          className="h-8 gap-1 font-normal hover:bg-accent/50 transition-colors"
+        >
+          {blockTypeToBlockName[blockType]}
+          <ChevronDown className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="min-w-[180px]">
+        {blockTypeToBlockName.paragraph !== undefined && (
+          <DropdownMenuItem
+            className="hover:bg-accent/50 transition-colors cursor-pointer"
+            onClick={() => {
+              formatParagraph(editor);
+            }}>
+            <span className="text">{blockTypeToBlockName.paragraph}</span>
+          </DropdownMenuItem>
+        )}
+        {blockTypeToBlockName.h1 !== undefined && (
+          <DropdownMenuItem
+            className="hover:bg-accent/50 transition-colors cursor-pointer"
+            onClick={() => {
+              formatHeading(editor, blockType, 'h1');
+            }}>
+            <span className="text">{blockTypeToBlockName.h1}</span>
+          </DropdownMenuItem>
+        )}
+        {blockTypeToBlockName.h2 !== undefined && (
+          <DropdownMenuItem
+            className="hover:bg-accent/50 transition-colors cursor-pointer"
+            onClick={() => {
+              formatHeading(editor, blockType, 'h2');
+            }}>
+            <span className="text">{blockTypeToBlockName.h2}</span>
+          </DropdownMenuItem>
+        )}
+        {blockTypeToBlockName.h3 !== undefined && (
+          <DropdownMenuItem
+            className="hover:bg-accent/50 transition-colors cursor-pointer"
+            onClick={() => {
+              formatHeading(editor, blockType, 'h3');
+            }}>
+            <span className="text">{blockTypeToBlockName.h3}</span>
+          </DropdownMenuItem>
+        )}
+        {blockTypeToBlockName.bullet !== undefined && (
+          <DropdownMenuItem
+            className="hover:bg-accent/50 transition-colors cursor-pointer"
+            onClick={() => {
+              formatBulletList(editor, blockType);
+            }}>
+            <span className="text">{blockTypeToBlockName.bullet}</span>
+          </DropdownMenuItem>
+        )}
+        {blockTypeToBlockName.number !== undefined && (
+          <DropdownMenuItem
+            className="hover:bg-accent/50 transition-colors cursor-pointer"
+            onClick={() => {
+              formatNumberedList(editor, blockType);
+            }}>
+            <span className="text">{blockTypeToBlockName.number}</span>
+          </DropdownMenuItem>
+        )}
+        {blockTypeToBlockName.check !== undefined && (
+          <DropdownMenuItem
+            className="hover:bg-accent/50 transition-colors cursor-pointer"
+            onClick={() => {
+              formatCheckList(editor, blockType);
+            }}>
+            <span className="text">{blockTypeToBlockName.check}</span>
+          </DropdownMenuItem>
+        )}
+        {blockTypeToBlockName.quote !== undefined && (
+          <DropdownMenuItem
+            className="hover:bg-accent/50 transition-colors cursor-pointer"
+            onClick={() => {
+              formatQuote(editor, blockType);
+            }}>
+            <span className="text">{blockTypeToBlockName.quote}</span>
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -319,32 +287,33 @@ function FontDropDown({
     [editor, style],
   );
 
-  const buttonAriaLabel =
-    style === 'font-family'
-      ? 'Formatting options for font family'
-      : 'Formatting options for font size';
-
   return (
-    <DropDown
-      disabled={disabled}
-      buttonClassName={'toolbar-item ' + style}
-      buttonLabel={value}
-      buttonIconClassName={
-        style === 'font-family' ? 'icon block-type font-family' : ''
-      }
-      buttonAriaLabel={buttonAriaLabel}>
-      {(style === 'font-family' ? FONT_FAMILY_OPTIONS : FONT_SIZE_OPTIONS).map(
-        ([option, text]) => (
-          <DropDownItem
-            className={`item ${dropDownActiveClass(value === option)} ${style === 'font-size' ? 'fontsize-item' : ''
-              }`}
-            onClick={() => handleClick(option)}
-            key={option}>
-            <span className="text">{text}</span>
-          </DropDownItem>
-        ),
-      )}
-    </DropDown>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={disabled}
+          className="h-8 gap-1 font-normal hover:bg-accent/50 transition-colors"
+        >
+          {value}
+          <ChevronDown className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="min-w-[180px]">
+        {(style === 'font-family' ? FONT_FAMILY_OPTIONS : FONT_SIZE_OPTIONS).map(
+          ([option, text]) => (
+            <DropdownMenuItem
+              key={option}
+              className="hover:bg-accent/50 transition-colors cursor-pointer"
+              onClick={() => handleClick(option)}
+            >
+              <span className="text">{text}</span>
+            </DropdownMenuItem>
+          ),
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -362,107 +331,108 @@ function ElementFormatDropdown({
   const formatOption = ELEMENT_FORMAT_OPTIONS[value || 'left'];
 
   return (
-    <DropDown
-      disabled={disabled}
-      buttonLabel={formatOption.name}
-      buttonIconClassName={`icon ${isRTL ? formatOption.iconRTL : formatOption.icon
-        }`}
-      buttonClassName="toolbar-item spaced alignment"
-      buttonAriaLabel="Formatting options for text alignment">
-      <DropDownItem
-        onClick={() => {
-          editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'left');
-        }}
-        className="item wide">
-        <div className="icon-text-container">
-          <i className="icon left-align" />
-          <span className="text">Left Align</span>
-        </div>
-        <span className="shortcut">{SHORTCUTS.LEFT_ALIGN}</span>
-      </DropDownItem>
-      <DropDownItem
-        onClick={() => {
-          editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'center');
-        }}
-        className="item wide">
-        <div className="icon-text-container">
-          <i className="icon center-align" />
-          <span className="text">Center Align</span>
-        </div>
-        <span className="shortcut">{SHORTCUTS.CENTER_ALIGN}</span>
-      </DropDownItem>
-      <DropDownItem
-        onClick={() => {
-          editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'right');
-        }}
-        className="item wide">
-        <div className="icon-text-container">
-          <i className="icon right-align" />
-          <span className="text">Right Align</span>
-        </div>
-        <span className="shortcut">{SHORTCUTS.RIGHT_ALIGN}</span>
-      </DropDownItem>
-      <DropDownItem
-        onClick={() => {
-          editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'justify');
-        }}
-        className="item wide">
-        <div className="icon-text-container">
-          <i className="icon justify-align" />
-          <span className="text">Justify Align</span>
-        </div>
-        <span className="shortcut">{SHORTCUTS.JUSTIFY_ALIGN}</span>
-      </DropDownItem>
-      <DropDownItem
-        onClick={() => {
-          editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'start');
-        }}
-        className="item wide">
-        <i
-          className={`icon ${isRTL
-            ? ELEMENT_FORMAT_OPTIONS.start.iconRTL
-            : ELEMENT_FORMAT_OPTIONS.start.icon
-            }`}
-        />
-        <span className="text">Start Align</span>
-      </DropDownItem>
-      <DropDownItem
-        onClick={() => {
-          editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'end');
-        }}
-        className="item wide">
-        <i
-          className={`icon ${isRTL
-            ? ELEMENT_FORMAT_OPTIONS.end.iconRTL
-            : ELEMENT_FORMAT_OPTIONS.end.icon
-            }`}
-        />
-        <span className="text">End Align</span>
-      </DropDownItem>
-      <Divider />
-      <DropDownItem
-        onClick={() => {
-          editor.dispatchCommand(OUTDENT_CONTENT_COMMAND, undefined);
-        }}
-        className="item wide">
-        <div className="icon-text-container">
-          <i className={'icon ' + (isRTL ? 'indent' : 'outdent')} />
-          <span className="text">Outdent</span>
-        </div>
-        <span className="shortcut">{SHORTCUTS.OUTDENT}</span>
-      </DropDownItem>
-      <DropDownItem
-        onClick={() => {
-          editor.dispatchCommand(INDENT_CONTENT_COMMAND, undefined);
-        }}
-        className="item wide">
-        <div className="icon-text-container">
-          <i className={'icon ' + (isRTL ? 'outdent' : 'indent')} />
-          <span className="text">Indent</span>
-        </div>
-        <span className="shortcut">{SHORTCUTS.INDENT}</span>
-      </DropDownItem>
-    </DropDown>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={disabled}
+          className="h-8 gap-1 font-normal hover:bg-accent/50 transition-colors"
+        >
+          {formatOption.name}
+          <ChevronDown className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="min-w-[180px]">
+        <DropdownMenuItem
+          className="hover:bg-accent/50 transition-colors cursor-pointer"
+          onClick={() => {
+            editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'left');
+          }}>
+          <div className="flex items-center gap-2">
+            <i className="icon left-align" />
+            <span className="text">Left Align</span>
+          </div>
+          <span className="ml-auto text-xs text-muted-foreground">{SHORTCUTS.LEFT_ALIGN}</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="hover:bg-accent/50 transition-colors cursor-pointer"
+          onClick={() => {
+            editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'center');
+          }}>
+          <div className="flex items-center gap-2">
+            <i className="icon center-align" />
+            <span className="text">Center Align</span>
+          </div>
+          <span className="ml-auto text-xs text-muted-foreground">{SHORTCUTS.CENTER_ALIGN}</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="hover:bg-accent/50 transition-colors cursor-pointer"
+          onClick={() => {
+            editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'right');
+          }}>
+          <div className="flex items-center gap-2">
+            <i className="icon right-align" />
+            <span className="text">Right Align</span>
+          </div>
+          <span className="ml-auto text-xs text-muted-foreground">{SHORTCUTS.RIGHT_ALIGN}</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="hover:bg-accent/50 transition-colors cursor-pointer"
+          onClick={() => {
+            editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'justify');
+          }}>
+          <div className="flex items-center gap-2">
+            <i className="icon justify-align" />
+            <span className="text">Justify Align</span>
+          </div>
+          <span className="ml-auto text-xs text-muted-foreground">{SHORTCUTS.JUSTIFY_ALIGN}</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="hover:bg-accent/50 transition-colors cursor-pointer"
+          onClick={() => {
+            editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'start');
+          }}>
+          <div className="flex items-center gap-2">
+            <i className={`icon ${isRTL ? ELEMENT_FORMAT_OPTIONS.start.iconRTL : ELEMENT_FORMAT_OPTIONS.start.icon}`} />
+            <span className="text">Start Align</span>
+          </div>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="hover:bg-accent/50 transition-colors cursor-pointer"
+          onClick={() => {
+            editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'end');
+          }}>
+          <div className="flex items-center gap-2">
+            <i className={`icon ${isRTL ? ELEMENT_FORMAT_OPTIONS.end.iconRTL : ELEMENT_FORMAT_OPTIONS.end.icon}`} />
+            <span className="text">End Align</span>
+          </div>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="hover:bg-accent/50 transition-colors cursor-pointer"
+          onClick={() => {
+            editor.dispatchCommand(OUTDENT_CONTENT_COMMAND, undefined);
+          }}>
+          <div className="flex items-center gap-2">
+            <i className={'icon ' + (isRTL ? 'indent' : 'outdent')} />
+            <span className="text">Outdent</span>
+          </div>
+          <span className="ml-auto text-xs text-muted-foreground">{SHORTCUTS.OUTDENT}</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="hover:bg-accent/50 transition-colors cursor-pointer"
+          onClick={() => {
+            editor.dispatchCommand(INDENT_CONTENT_COMMAND, undefined);
+          }}>
+          <div className="flex items-center gap-2">
+            <i className={'icon ' + (isRTL ? 'outdent' : 'indent')} />
+            <span className="text">Indent</span>
+          </div>
+          <span className="ml-auto text-xs text-muted-foreground">{SHORTCUTS.INDENT}</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -520,8 +490,6 @@ export default function ToolbarPlugin({
       // Update links
       const node = getSelectedNode(selection);
       const parent = node.getParent();
-      const isLink = $isLinkNode(parent) || $isLinkNode(node);
-      updateToolbarState('isLink', isLink);
 
       const tableNode = $findMatchingParent(node, $isTableNode);
       if ($isTableNode(tableNode)) {
@@ -552,15 +520,6 @@ export default function ToolbarPlugin({
               type as keyof typeof blockTypeToBlockName,
             );
           }
-          if ($isCodeNode(element)) {
-            const language =
-              element.getLanguage() as keyof typeof CODE_LANGUAGE_MAP;
-            updateToolbarState(
-              'codeLanguage',
-              language ? CODE_LANGUAGE_MAP[language] || language : '',
-            );
-            return;
-          }
         }
       }
       // Handle buttons
@@ -581,13 +540,6 @@ export default function ToolbarPlugin({
         $getSelectionStyleValueForProperty(selection, 'font-family', 'Arial'),
       );
       let matchingParent;
-      if ($isLinkNode(parent)) {
-        // If node is a link, we need to fetch the parent paragraph node to set format
-        matchingParent = $findMatchingParent(
-          node,
-          (parentNode) => $isElementNode(parentNode) && !parentNode.isInline(),
-        );
-      }
 
       // If matchingParent is a valid node, pass it's format type
       updateToolbarState(
@@ -610,7 +562,6 @@ export default function ToolbarPlugin({
       );
       updateToolbarState('isSubscript', selection.hasFormat('subscript'));
       updateToolbarState('isSuperscript', selection.hasFormat('superscript'));
-      updateToolbarState('isCode', selection.hasFormat('code'));
       updateToolbarState(
         'fontSize',
         $getSelectionStyleValueForProperty(selection, 'font-size', '15px'),
@@ -683,38 +634,7 @@ export default function ToolbarPlugin({
     [activeEditor],
   );
 
-  const insertLink = useCallback(() => {
-    if (!toolbarState.isLink) {
-      setIsLinkEditMode(true);
-      activeEditor.dispatchCommand(
-        TOGGLE_LINK_COMMAND,
-        sanitizeUrl('https://'),
-      );
-    } else {
-      setIsLinkEditMode(false);
-      activeEditor.dispatchCommand(TOGGLE_LINK_COMMAND, null);
-    }
-  }, [activeEditor, setIsLinkEditMode, toolbarState.isLink]);
-
-  const onCodeLanguageSelect = useCallback(
-    (value: string) => {
-      activeEditor.update(() => {
-        if (selectedElementKey !== null) {
-          const node = $getNodeByKey(selectedElementKey);
-          if ($isCodeNode(node)) {
-            node.setLanguage(value);
-          }
-        }
-      });
-    },
-    [activeEditor, selectedElementKey],
-  );
-  const insertGifOnClick = (payload: InsertImagePayload) => {
-    activeEditor.dispatchCommand(INSERT_IMAGE_COMMAND, payload);
-  };
-
   const canViewerSeeInsertDropdown = !toolbarState.isImageCaption;
-  const canViewerSeeInsertCodeButton = !toolbarState.isImageCaption;
 
   return (
     <div className="toolbar">
@@ -753,262 +673,187 @@ export default function ToolbarPlugin({
             <Divider />
           </>
         )}
-      {toolbarState.blockType === 'code' ? (
-        <DropDown
+      <>
+        <FontDropDown
           disabled={!isEditable}
-          buttonClassName="toolbar-item code-language"
-          buttonLabel={getLanguageFriendlyName(toolbarState.codeLanguage)}
-          buttonAriaLabel="Select language">
-          {CODE_LANGUAGE_OPTIONS.map(([value, name]) => {
-            return (
-              <DropDownItem
-                className={`item ${dropDownActiveClass(
-                  value === toolbarState.codeLanguage,
-                )}`}
-                onClick={() => onCodeLanguageSelect(value)}
-                key={value}>
-                <span className="text">{name}</span>
-              </DropDownItem>
-            );
-          })}
-        </DropDown>
-      ) : (
-        <>
-          <FontDropDown
-            disabled={!isEditable}
-            style={'font-family'}
-            value={toolbarState.fontFamily}
-            editor={activeEditor}
-          />
-          <Divider />
-          <FontSize
-            selectionFontSize={toolbarState.fontSize.slice(0, -2)}
-            editor={activeEditor}
-            disabled={!isEditable}
-          />
-          <Divider />
-          <button
-            disabled={!isEditable}
-            onClick={() => {
-              activeEditor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold');
-            }}
-            className={
-              'toolbar-item spaced ' + (toolbarState.isBold ? 'active' : '')
-            }
-            title={`Bold (${SHORTCUTS.BOLD})`}
-            type="button"
-            aria-label={`Format text as bold. Shortcut: ${SHORTCUTS.BOLD}`}>
-            <i className="format bold" />
-          </button>
-          <button
-            disabled={!isEditable}
-            onClick={() => {
-              activeEditor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic');
-            }}
-            className={
-              'toolbar-item spaced ' + (toolbarState.isItalic ? 'active' : '')
-            }
-            title={`Italic (${SHORTCUTS.ITALIC})`}
-            type="button"
-            aria-label={`Format text as italics. Shortcut: ${SHORTCUTS.ITALIC}`}>
-            <i className="format italic" />
-          </button>
-          <button
-            disabled={!isEditable}
-            onClick={() => {
-              activeEditor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline');
-            }}
-            className={
-              'toolbar-item spaced ' +
-              (toolbarState.isUnderline ? 'active' : '')
-            }
-            title={`Underline (${SHORTCUTS.UNDERLINE})`}
-            type="button"
-            aria-label={`Format text to underlined. Shortcut: ${SHORTCUTS.UNDERLINE}`}>
-            <i className="format underline" />
-          </button>
-          {canViewerSeeInsertCodeButton && (
-            <button
+          style={'font-family'}
+          value={toolbarState.fontFamily}
+          editor={activeEditor}
+        />
+        <Divider />
+        <FontSize
+          selectionFontSize={toolbarState.fontSize.slice(0, -2)}
+          editor={activeEditor}
+          disabled={!isEditable}
+        />
+        <Divider />
+        <Button
+          disabled={!isEditable}
+          onClick={() => {
+            activeEditor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold');
+          }}
+          variant="ghost"
+          size="icon"
+          className={'h-8 w-8 hover:bg-accent/50 transition-colors ' + (toolbarState.isBold ? 'bg-accent/50' : '')}
+          title={`Bold (${SHORTCUTS.BOLD})`}
+          aria-label={`Format text as bold. Shortcut: ${SHORTCUTS.BOLD}`}
+        >
+          <Bold className="h-4 w-4" />
+        </Button>
+        <Button
+          disabled={!isEditable}
+          onClick={() => {
+            activeEditor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic');
+          }}
+          variant="ghost"
+          size="icon"
+          className={'h-8 w-8 hover:bg-accent/50 transition-colors ' + (toolbarState.isItalic ? 'bg-accent/50' : '')}
+          title={`Italic (${SHORTCUTS.ITALIC})`}
+          aria-label={`Format text as italics. Shortcut: ${SHORTCUTS.ITALIC}`}
+        >
+          <Italic className="h-4 w-4" />
+        </Button>
+        <Button
+          disabled={!isEditable}
+          onClick={() => {
+            activeEditor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline');
+          }}
+          variant="ghost"
+          size="icon"
+          className={'h-8 w-8 hover:bg-accent/50 transition-colors ' + (toolbarState.isUnderline ? 'bg-accent/50' : '')}
+          title={`Underline (${SHORTCUTS.UNDERLINE})`}
+          aria-label={`Format text to underlined. Shortcut: ${SHORTCUTS.UNDERLINE}`}
+        >
+          <Underline className="h-4 w-4" />
+        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
               disabled={!isEditable}
-              onClick={() => {
-                activeEditor.dispatchCommand(FORMAT_TEXT_COMMAND, 'code');
-              }}
-              className={
-                'toolbar-item spaced ' + (toolbarState.isCode ? 'active' : '')
-              }
-              title={`Insert code block (${SHORTCUTS.INSERT_CODE_BLOCK})`}
-              type="button"
-              aria-label="Insert code block">
-              <i className="format code" />
-            </button>
-          )}
-          <button
-            disabled={!isEditable}
-            onClick={insertLink}
-            className={
-              'toolbar-item spaced ' + (toolbarState.isLink ? 'active' : '')
-            }
-            aria-label="Insert link"
-            title={`Insert link (${SHORTCUTS.INSERT_LINK})`}
-            type="button">
-            <i className="format link" />
-          </button>
-          <DropDown
-            disabled={!isEditable}
-            buttonClassName="toolbar-item spaced"
-            buttonLabel=""
-            buttonAriaLabel="Formatting options for additional text styles"
-            buttonIconClassName="icon dropdown-more">
-            <DropDownItem
+              className="h-8 w-8 hover:bg-accent/50 transition-colors"
+              aria-label="Formatting options for additional text styles"
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="min-w-[180px]">
+            <DropdownMenuItem
+              className="hover:bg-accent/50 transition-colors cursor-pointer"
               onClick={() => {
                 activeEditor.dispatchCommand(FORMAT_TEXT_COMMAND, 'lowercase');
-              }}
-              className={
-                'item wide ' + dropDownActiveClass(toolbarState.isLowercase)
-              }
-              title="Lowercase"
-              aria-label="Format text to lowercase">
-              <div className="icon-text-container">
+              }}>
+              <div className="flex items-center gap-2">
                 <i className="icon lowercase" />
                 <span className="text">Lowercase</span>
               </div>
-              <span className="shortcut">{SHORTCUTS.LOWERCASE}</span>
-            </DropDownItem>
-            <DropDownItem
+              <span className="ml-auto text-xs text-muted-foreground">{SHORTCUTS.LOWERCASE}</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="hover:bg-accent/50 transition-colors cursor-pointer"
               onClick={() => {
                 activeEditor.dispatchCommand(FORMAT_TEXT_COMMAND, 'uppercase');
-              }}
-              className={
-                'item wide ' + dropDownActiveClass(toolbarState.isUppercase)
-              }
-              title="Uppercase"
-              aria-label="Format text to uppercase">
-              <div className="icon-text-container">
+              }}>
+              <div className="flex items-center gap-2">
                 <i className="icon uppercase" />
                 <span className="text">Uppercase</span>
               </div>
-              <span className="shortcut">{SHORTCUTS.UPPERCASE}</span>
-            </DropDownItem>
-            <DropDownItem
+              <span className="ml-auto text-xs text-muted-foreground">{SHORTCUTS.UPPERCASE}</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="hover:bg-accent/50 transition-colors cursor-pointer"
               onClick={() => {
                 activeEditor.dispatchCommand(FORMAT_TEXT_COMMAND, 'capitalize');
-              }}
-              className={
-                'item wide ' + dropDownActiveClass(toolbarState.isCapitalize)
-              }
-              title="Capitalize"
-              aria-label="Format text to capitalize">
-              <div className="icon-text-container">
+              }}>
+              <div className="flex items-center gap-2">
                 <i className="icon capitalize" />
                 <span className="text">Capitalize</span>
               </div>
-              <span className="shortcut">{SHORTCUTS.CAPITALIZE}</span>
-            </DropDownItem>
-            <DropDownItem
+              <span className="ml-auto text-xs text-muted-foreground">{SHORTCUTS.CAPITALIZE}</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="hover:bg-accent/50 transition-colors cursor-pointer"
               onClick={() => {
-                activeEditor.dispatchCommand(
-                  FORMAT_TEXT_COMMAND,
-                  'strikethrough',
-                );
-              }}
-              className={
-                'item wide ' + dropDownActiveClass(toolbarState.isStrikethrough)
-              }
-              title="Strikethrough"
-              aria-label="Format text with a strikethrough">
-              <div className="icon-text-container">
-                <i className="icon strikethrough" />
+                activeEditor.dispatchCommand(FORMAT_TEXT_COMMAND, 'strikethrough');
+              }}>
+              <div className="flex items-center gap-2">
+                <Strikethrough className="h-4 w-4" />
                 <span className="text">Strikethrough</span>
               </div>
-              <span className="shortcut">{SHORTCUTS.STRIKETHROUGH}</span>
-            </DropDownItem>
-            <DropDownItem
+              <span className="ml-auto text-xs text-muted-foreground">{SHORTCUTS.STRIKETHROUGH}</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="hover:bg-accent/50 transition-colors cursor-pointer"
               onClick={() => {
                 activeEditor.dispatchCommand(FORMAT_TEXT_COMMAND, 'subscript');
-              }}
-              className={
-                'item wide ' + dropDownActiveClass(toolbarState.isSubscript)
-              }
-              title="Subscript"
-              aria-label="Format text with a subscript">
-              <div className="icon-text-container">
+              }}>
+              <div className="flex items-center gap-2">
                 <i className="icon subscript" />
                 <span className="text">Subscript</span>
               </div>
-              <span className="shortcut">{SHORTCUTS.SUBSCRIPT}</span>
-            </DropDownItem>
-            <DropDownItem
+              <span className="ml-auto text-xs text-muted-foreground">{SHORTCUTS.SUBSCRIPT}</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="hover:bg-accent/50 transition-colors cursor-pointer"
               onClick={() => {
-                activeEditor.dispatchCommand(
-                  FORMAT_TEXT_COMMAND,
-                  'superscript',
-                );
-              }}
-              className={
-                'item wide ' + dropDownActiveClass(toolbarState.isSuperscript)
-              }
-              title="Superscript"
-              aria-label="Format text with a superscript">
-              <div className="icon-text-container">
+                activeEditor.dispatchCommand(FORMAT_TEXT_COMMAND, 'superscript');
+              }}>
+              <div className="flex items-center gap-2">
                 <i className="icon superscript" />
                 <span className="text">Superscript</span>
               </div>
-              <span className="shortcut">{SHORTCUTS.SUPERSCRIPT}</span>
-            </DropDownItem>
-            <DropDownItem
-              onClick={() => clearFormatting(activeEditor)}
-              className="item wide"
-              title="Clear text formatting"
-              aria-label="Clear all text formatting">
-              <div className="icon-text-container">
+              <span className="ml-auto text-xs text-muted-foreground">{SHORTCUTS.SUPERSCRIPT}</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="hover:bg-accent/50 transition-colors cursor-pointer"
+              onClick={() => clearFormatting(activeEditor)}>
+              <div className="flex items-center gap-2">
                 <i className="icon clear" />
                 <span className="text">Clear Formatting</span>
               </div>
-              <span className="shortcut">{SHORTCUTS.CLEAR_FORMATTING}</span>
-            </DropDownItem>
-          </DropDown>
-          {canViewerSeeInsertDropdown && (
-            <>
-              <Divider />
-              <DropDown
-                disabled={!isEditable}
-                buttonClassName="toolbar-item spaced"
-                buttonLabel="Insert"
-                buttonAriaLabel="Insert specialized editor node"
-                buttonIconClassName="icon plus">
-                <DropDownItem
+              <span className="ml-auto text-xs text-muted-foreground">{SHORTCUTS.CLEAR_FORMATTING}</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        {canViewerSeeInsertDropdown && (
+          <>
+            <div className="w-[1px] h-6 bg-border mx-1" />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={!isEditable}
+                  className="h-8 gap-1 font-normal hover:bg-accent/50 transition-colors"
+                >
+                  Insert
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="min-w-[180px]">
+                <DropdownMenuItem
+                  className="hover:bg-accent/50 transition-colors cursor-pointer"
                   onClick={() => {
-                    activeEditor.dispatchCommand(
-                      INSERT_HORIZONTAL_RULE_COMMAND,
-                      undefined,
-                    );
-                  }}
-                  className="item">
-                  <i className="icon horizontal-rule" />
-                  <span className="text">Horizontal Rule</span>
-                </DropDownItem>
-                <DropDownItem
+                    activeEditor.dispatchCommand(INSERT_HORIZONTAL_RULE_COMMAND, undefined);
+                  }}>
+                  <div className="flex items-center gap-2">
+                    <Minus className="h-4 w-4" />
+                    <span className="text">Horizontal Rule</span>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="hover:bg-accent/50 transition-colors cursor-pointer"
                   onClick={() => {
                     activeEditor.dispatchCommand(INSERT_PAGE_BREAK, undefined);
-                  }}
-                  className="item">
-                  <i className="icon page-break" />
-                  <span className="text">Page Break</span>
-                </DropDownItem>
-                <DropDownItem
-                  onClick={() => {
-                    showModal('Insert Image', (onClose) => (
-                      <InsertImageDialog
-                        activeEditor={activeEditor}
-                        onClose={onClose}
-                      />
-                    ));
-                  }}
-                  className="item">
-                  <i className="icon image" />
-                  <span className="text">Image</span>
-                </DropDownItem>
-                <DropDownItem
+                  }}>
+                  <div className="flex items-center gap-2">
+                    <i className="icon page-break" />
+                    <span className="text">Page Break</span>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="hover:bg-accent/50 transition-colors cursor-pointer"
                   onClick={() => {
                     editor.update(() => {
                       const selection = $getSelection();
@@ -1018,16 +863,17 @@ export default function ToolbarPlugin({
                         selection.insertNodes([helloNode, paragraphNode]);
                       }
                     });
-                  }}
-                  className="item">
-                  <i className="icon bot" />
-                  <span className="text">AI Assistant</span>
-                </DropDownItem>
-              </DropDown>
-            </>
-          )}
-        </>
-      )}
+                  }}>
+                  <div className="flex items-center gap-2">
+                    <i className="icon bot" />
+                    <span className="text">AI Assistant</span>
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
+        )}
+      </>
       <Divider />
       <ElementFormatDropdown
         disabled={!isEditable}

@@ -779,10 +779,10 @@ i.page-break,
   margin-bottom: 8px;
 }
 
-.dropdown .item:hover {
+/* .dropdown .item:hover {
   background-color: hsl(var(--accent));
   color: hsl(var(--accent-foreground));
-}
+} */
 
 .dropdown .item .text {
   display: flex;
