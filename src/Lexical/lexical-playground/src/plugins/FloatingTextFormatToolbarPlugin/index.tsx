@@ -36,37 +36,17 @@ import { INSERT_INLINE_COMMAND } from '../CommentPlugin';
 function TextFormatFloatingToolbar({
   editor,
   anchorElem,
-  isLink,
   isBold,
   isItalic,
   isUnderline,
-  setIsLinkEditMode,
 }: {
   editor: LexicalEditor;
   anchorElem: HTMLElement;
   isBold: boolean;
-  isCode: boolean;
   isItalic: boolean;
-  isLink: boolean;
   isUnderline: boolean;
-  setIsLinkEditMode: Dispatch<boolean>;
 }): JSX.Element {
   const popupCharStylesEditorRef = useRef<HTMLDivElement | null>(null);
-
-  const insertLink = useCallback(() => {
-    if (!isLink) {
-      setIsLinkEditMode(true);
-      editor.dispatchCommand(TOGGLE_LINK_COMMAND, 'https://');
-    } else {
-      setIsLinkEditMode(false);
-      editor.dispatchCommand(TOGGLE_LINK_COMMAND, null);
-    }
-  }, [editor, isLink, setIsLinkEditMode]);
-
-  const insertComment = () => {
-    editor.dispatchCommand(INSERT_INLINE_COMMAND, undefined);
-  };
-
   function mouseMoveListener(e: MouseEvent) {
     if (
       popupCharStylesEditorRef?.current &&
@@ -128,10 +108,9 @@ function TextFormatFloatingToolbar({
         rangeRect,
         popupCharStylesEditorElem,
         anchorElem,
-        isLink,
       );
     }
-  }, [editor, anchorElem, isLink]);
+  }, [editor, anchorElem]);
 
   useEffect(() => {
     const scrollerElem = anchorElem.parentElement;
@@ -211,24 +190,8 @@ function TextFormatFloatingToolbar({
             aria-label="Format text to underlined">
             <i className="format underline" />
           </button>
-          <button
-            type="button"
-            onClick={insertLink}
-            className={'popup-item spaced ' + (isLink ? 'active' : '')}
-            title="Insert link"
-            aria-label="Insert link">
-            <i className="format link" />
-          </button>
         </>
       )}
-      <button
-        type="button"
-        onClick={insertComment}
-        className={'popup-item spaced insert-comment'}
-        title="Insert comment"
-        aria-label="Insert comment">
-        <i className="format add-comment" />
-      </button>
     </div>
   );
 }
@@ -342,12 +305,9 @@ function useFloatingTextFormatToolbar(
     <TextFormatFloatingToolbar
       editor={editor}
       anchorElem={anchorElem}
-      isLink={isLink}
       isBold={isBold}
       isItalic={isItalic}
       isUnderline={isUnderline}
-      isCode={isCode}
-      setIsLinkEditMode={setIsLinkEditMode}
     />,
     anchorElem,
   );

@@ -8,20 +8,6 @@
 
 @import "https://fonts.googleapis.com/css?family=Reenie+Beanie";
 
-body {
-  margin: 0;
-  font-family:
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    ".SFNSText-Regular",
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background: #eee;
-  padding: 0 20px;
-}
-
 header {
   max-width: 580px;
   margin: auto;
@@ -54,7 +40,6 @@ header h1 {
   color: hsl(var(--foreground));
   border-color: hsl(var(--border));
   margin: 20px auto;
-  border-radius: 8px;
   max-width: 100%;
   position: relative;
   line-height: 1.7;
@@ -1471,8 +1456,6 @@ button.action-button:disabled {
   background: hsl(var(--muted));
   border-bottom: 1px solid hsl(var(--border));
   padding: 4px;
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
   display: flex;
   margin-bottom: 1px;
   background: #fff;
@@ -1805,7 +1788,6 @@ button.item.dropdown-item-active i {
   color: hsl(var(--foreground));
   border-color: hsl(var(--border));
   margin: 20px auto;
-  border-radius: 8px;
   max-width: 100%;
   position: relative;
   line-height: 1.7;
@@ -1818,8 +1800,6 @@ button.item.dropdown-item-active i {
   position: relative;
   cursor: text;
   display: block;
-  border-bottom-left-radius: 8px;
-  border-bottom-right-radius: 8px;
 }
 
 /* Toolbar styling */
@@ -1827,8 +1807,6 @@ button.item.dropdown-item-active i {
   background: hsl(var(--muted));
   border-bottom: 1px solid hsl(var(--border));
   padding: 4px;
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
 }
 
 .toolbar button.toolbar-item {
@@ -1882,7 +1860,6 @@ button.item.dropdown-item-active i {
 .helloworld-node {
   background: hsl(var(--card));
   border: 1px solid hsl(var(--border));
-  border-radius: 8px;
   padding: 1rem;
   margin: 1rem 0;
 }

@@ -1035,7 +1035,6 @@ export default function ToolbarPlugin({
         editor={activeEditor}
         isRTL={toolbarState.isRTL}
       />
-
       {modal}
     </div>
   );
