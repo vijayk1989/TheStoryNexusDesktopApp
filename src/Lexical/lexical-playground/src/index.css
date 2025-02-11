@@ -30,30 +30,22 @@ header img {
 
 header h1 {
   text-align: left;
-  color: #333;
+  color: hsl(var(--foreground));
   display: inline-block;
   margin: 20px 0 0 0;
 }
 
 .editor-shell {
-  background: hsl(var(--background));
-  color: hsl(var(--foreground));
-  border-color: hsl(var(--border));
-  margin: 20px auto;
-  max-width: 100%;
-  position: relative;
+  @apply bg-background text-foreground border border-border relative;
   line-height: 1.7;
   font-weight: 400;
 }
 
 .editor-shell .editor-container {
-  background: hsl(var(--card));
-  color: hsl(var(--card-foreground));
-  position: relative;
-  cursor: text;
+  @apply bg-background relative cursor-text;
   display: block;
-  border-bottom-left-radius: 8px;
-  border-bottom-right-radius: 8px;
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
 }
 
 .editor-shell .editor-container.tree-view {
@@ -92,8 +84,8 @@ header h1 {
 
 pre {
   line-height: 1.1;
-  background: #222;
-  color: #fff;
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
   margin: 0;
   padding: 10px;
   font-size: 12px;
@@ -103,8 +95,8 @@ pre {
 
 .tree-view-output {
   display: block;
-  background: #222;
-  color: #fff;
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
   padding: 0;
   font-size: 12px;
   margin: 1px auto 10px auto;
@@ -134,7 +126,8 @@ pre::-webkit-scrollbar-thumb {
   cursor: pointer;
   outline: none;
   box-shadow: 0px 1px 10px rgba(0, 0, 0, 0.3);
-  background-color: #444;
+  background-color: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
 }
 
 .editor-dev-button::after {
@@ -150,11 +143,11 @@ pre::-webkit-scrollbar-thumb {
 }
 
 .editor-dev-button:hover {
-  background-color: #555;
+  background-color: hsl(var(--accent));
 }
 
 .editor-dev-button.active {
-  background-color: rgb(233, 35, 35);
+  background-color: hsl(var(--destructive));
 }
 
 .test-recorder-toolbar {
@@ -173,7 +166,8 @@ pre::-webkit-scrollbar-thumb {
   cursor: pointer;
   outline: none;
   box-shadow: 1px 2px 2px rgba(0, 0, 0, 0.4);
-  background-color: #222;
+  background-color: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
   transition: box-shadow 50ms ease-out;
 }
 
@@ -729,11 +723,7 @@ i.page-break,
 }
 
 .dropdown {
-  background: hsl(var(--popover));
-  color: hsl(var(--popover-foreground));
-  border: 1px solid hsl(var(--border));
-  border-radius: 0.375rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  @apply bg-popover text-popover-foreground border border-border rounded-md shadow-sm;
   z-index: 100;
   display: block;
   position: fixed;
@@ -1453,30 +1443,11 @@ button.action-button:disabled {
 }
 
 .toolbar {
-  background: hsl(var(--muted));
-  border-bottom: 1px solid hsl(var(--border));
-  padding: 4px;
-  display: flex;
-  margin-bottom: 1px;
-  background: #fff;
-  vertical-align: middle;
-  overflow: auto;
-  height: 36px;
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  overflow-y: hidden; /* disable vertical scroll*/
+  @apply bg-muted border-b border-border p-2 sticky top-0 z-[2] flex overflow-x-auto overflow-y-hidden;
 }
 
 button.toolbar-item {
-  background: transparent;
-  color: hsl(var(--foreground));
-  border: 0;
-  display: flex;
-  padding: 8px;
-  cursor: pointer;
-  vertical-align: middle;
-  border-radius: 4px;
+  @apply bg-transparent border-none rounded text-foreground cursor-pointer h-8 px-2 flex items-center justify-center;
 }
 
 button.toolbar-item:disabled {
@@ -1504,8 +1475,7 @@ button.toolbar-item:disabled .chevron-down {
 }
 
 button.toolbar-item.active {
-  background: hsl(var(--accent));
-  color: hsl(var(--accent-foreground));
+  @apply bg-accent text-accent-foreground;
 }
 
 button.toolbar-item.active i {
@@ -1513,8 +1483,7 @@ button.toolbar-item.active i {
 }
 
 .toolbar-item:hover:not([disabled]) {
-  background: hsl(var(--accent));
-  color: hsl(var(--accent-foreground));
+  @apply bg-accent text-accent-foreground;
 }
 
 .toolbar-item.font-family .text {
@@ -1766,6 +1735,331 @@ button.item.dropdown-item-active i {
 }
 
 /* Add dark mode styles for the editor */
+/* :root.dark .editor-shell {
+  background: #1e1e1e;
+  color: #fff;
+}
+
+:root.dark .editor-shell .editor-container {
+  background: #2d2d2d;
+}
+
+:root.dark .toolbar {
+  background: #2d2d2d;
+  border-color: #444;
+} */
+
+/* Add any other dark mode overrides needed for Lexical components */
+
+/* Theme-aware styles for the editor */
+.editor-shell {
+  @apply bg-background text-foreground border border-border relative;
+  line-height: 1.7;
+  font-weight: 400;
+}
+
+.editor-shell .editor-container {
+  @apply bg-background relative cursor-text;
+  display: block;
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+}
+
+/* Toolbar styling */
+.toolbar {
+  @apply bg-muted border-b border-border p-2 sticky top-0 z-[2] flex overflow-x-auto overflow-y-hidden;
+}
+
+/* Button styling */
+.toolbar button.toolbar-item {
+  @apply bg-transparent border-none rounded text-foreground cursor-pointer h-8 px-2 flex items-center justify-center;
+}
+
+.toolbar button.toolbar-item:disabled {
+  cursor: not-allowed;
+}
+
+.toolbar button.toolbar-item.spaced {
+  margin-right: 2px;
+}
+
+.toolbar button.toolbar-item i.format {
+  color: hsl(var(--foreground));
+  background-size: contain;
+  display: inline-block;
+  height: 18px;
+  width: 18px;
+  vertical-align: -0.25em;
+}
+
+.toolbar button.toolbar-item:disabled .icon,
+.toolbar button.toolbar-item:disabled .text,
+.toolbar button.toolbar-item:disabled i.format,
+.toolbar button.toolbar-item:disabled .chevron-down {
+  opacity: 0.2;
+}
+
+.toolbar button.toolbar-item.active {
+  @apply bg-accent text-accent-foreground;
+}
+
+.toolbar button.toolbar-item.active i {
+  opacity: 1;
+}
+
+.toolbar-item:hover:not([disabled]) {
+  @apply bg-accent text-accent-foreground;
+}
+
+.toolbar-item.font-family .text {
+  display: block;
+  max-width: 40px;
+}
+
+.toolbar .code-language {
+  width: 150px;
+}
+
+.toolbar .toolbar-item .text {
+  color: hsl(var(--foreground));
+  line-height: 20px;
+  vertical-align: middle;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  height: 20px;
+  text-align: left;
+  padding-right: 10px;
+}
+
+.toolbar .toolbar-item .icon {
+  display: flex;
+  width: 20px;
+  height: 20px;
+  user-select: none;
+  margin-right: 8px;
+  line-height: 16px;
+  background-size: contain;
+}
+
+.toolbar i.chevron-down,
+.toolbar-item i.chevron-down {
+  margin-top: 3px;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  user-select: none;
+}
+
+.toolbar i.chevron-down.inside {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  margin-left: -25px;
+  margin-top: 11px;
+  margin-right: 10px;
+  pointer-events: none;
+}
+
+.toolbar .divider {
+  width: 1px;
+  background-color: #eee;
+  margin: 0 4px;
+}
+
+.sticky-note-container {
+  position: absolute;
+  z-index: 9;
+  width: 120px;
+  display: inline-block;
+}
+
+.sticky-note {
+  line-height: 1;
+  text-align: left;
+  width: 120px;
+  margin: 25px;
+  padding: 20px 10px;
+  position: relative;
+  border: 1px solid #e8e8e8;
+  font-family: "Reenie Beanie";
+  font-size: 24px;
+  border-bottom-right-radius: 60px 5px;
+  display: block;
+  cursor: move;
+}
+
+.sticky-note:after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  right: -0px;
+  bottom: 20px;
+  width: 120px;
+  height: 25px;
+  background: rgba(0, 0, 0, 0.2);
+  box-shadow: 2px 15px 5px rgba(0, 0, 0, 0.4);
+  transform: matrix(-1, -0.1, 0, 1, 0, 0);
+}
+
+.sticky-note.yellow {
+  border-top: 1px solid #fdfd86;
+  background: linear-gradient(
+    135deg,
+    #ffff88 81%,
+    #ffff88 82%,
+    #ffff88 82%,
+    #ffffc6 100%
+  );
+}
+
+.sticky-note.pink {
+  border-top: 1px solid #e7d1e4;
+  background: linear-gradient(
+    135deg,
+    #f7cbe8 81%,
+    #f7cbe8 82%,
+    #f7cbe8 82%,
+    #e7bfe1 100%
+  );
+}
+
+.sticky-note-container.dragging {
+  transition: none !important;
+}
+
+.sticky-note div {
+  cursor: text;
+}
+
+.sticky-note .delete {
+  border: 0;
+  background: none;
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 10px;
+  cursor: pointer;
+  opacity: 0.5;
+}
+
+.sticky-note .delete:hover {
+  font-weight: bold;
+  opacity: 1;
+}
+
+.sticky-note .color {
+  border: 0;
+  background: none;
+  position: absolute;
+  top: 8px;
+  right: 25px;
+  cursor: pointer;
+  opacity: 0.5;
+}
+
+.sticky-note .color:hover {
+  opacity: 1;
+}
+
+.sticky-note .color i {
+  display: block;
+  width: 12px;
+  height: 12px;
+  background-size: contain;
+}
+
+.excalidraw-button {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background-color: transparent;
+}
+
+.excalidraw-button.selected {
+  outline: 2px solid rgb(60, 132, 244);
+  user-select: none;
+}
+
+.github-corner:hover .octo-arm {
+  animation: octocat-wave 560ms ease-in-out;
+}
+
+@keyframes octocat-wave {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+
+  20%,
+  60% {
+    transform: rotate(-25deg);
+  }
+
+  40%,
+  80% {
+    transform: rotate(10deg);
+  }
+}
+
+@media (max-width: 500px) {
+  .github-corner:hover .octo-arm {
+    animation: none;
+  }
+
+  .github-corner .octo-arm {
+    animation: octocat-wave 560ms ease-in-out;
+  }
+}
+
+.spacer {
+  letter-spacing: -2px;
+}
+
+.editor-equation {
+  cursor: default;
+  user-select: none;
+}
+
+.editor-equation.focused {
+  outline: 2px solid rgb(60, 132, 244);
+}
+
+button.item i {
+  opacity: 0.6;
+}
+
+button.item.dropdown-item-active {
+  background-color: rgba(223, 232, 250, 0.3);
+}
+
+button.item.dropdown-item-active i {
+  opacity: 1;
+}
+
+.TableNode__contentEditable {
+  min-height: 20px;
+  border: 0px;
+  resize: none;
+  cursor: text;
+  display: block;
+  position: relative;
+  outline: 0px;
+  padding: 0;
+  user-select: text;
+  font-size: 15px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  z-index: 3;
+}
+
+.dialog-dropdown {
+  background-color: #eee !important;
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+/* Add dark mode styles for the editor
 :root.dark .editor-shell {
   background: #1e1e1e;
   color: #fff;
@@ -1778,69 +2072,40 @@ button.item.dropdown-item-active i {
 :root.dark .toolbar {
   background: #2d2d2d;
   border-color: #444;
-}
+} */
 
 /* Add any other dark mode overrides needed for Lexical components */
 
 /* Theme-aware styles for the editor */
 .editor-shell {
-  background: hsl(var(--background));
-  color: hsl(var(--foreground));
-  border-color: hsl(var(--border));
-  margin: 20px auto;
-  max-width: 100%;
-  position: relative;
+  @apply bg-background text-foreground border border-border relative;
   line-height: 1.7;
   font-weight: 400;
 }
 
 .editor-shell .editor-container {
-  background: hsl(var(--card));
-  color: hsl(var(--card-foreground));
-  position: relative;
-  cursor: text;
+  @apply bg-background relative cursor-text;
   display: block;
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
 }
 
 /* Toolbar styling */
 .toolbar {
-  background: hsl(var(--muted));
-  border-bottom: 1px solid hsl(var(--border));
-  padding: 4px;
+  @apply bg-muted border-b border-border p-2 sticky top-0 z-[2] flex overflow-x-auto overflow-y-hidden;
 }
 
+/* Button styling */
 .toolbar button.toolbar-item {
-  background: transparent;
-  color: hsl(var(--foreground));
-  border: 0;
-  display: flex;
-  padding: 8px;
-  cursor: pointer;
-  vertical-align: middle;
-  border-radius: 4px;
+  @apply bg-transparent border-none text-foreground cursor-pointer h-8 px-2 flex items-center justify-center;
+}
+
+.toolbar button.toolbar-item:hover:not([disabled]) {
+  @apply bg-accent text-accent-foreground;
 }
 
 .toolbar button.toolbar-item.active {
-  background: hsl(var(--accent));
-  color: hsl(var(--accent-foreground));
-}
-
-.toolbar .toolbar-item:hover:not([disabled]) {
-  background: hsl(var(--accent));
-  color: hsl(var(--accent-foreground));
-}
-
-.toolbar .toolbar-item.spaced {
-  margin-right: 2px;
-}
-
-.toolbar .toolbar-item i.format {
-  color: hsl(var(--foreground));
-  background-size: contain;
-  display: inline-block;
-  height: 18px;
-  width: 18px;
-  vertical-align: -0.25em;
+  @apply bg-accent text-accent-foreground;
 }
 
 /* Dropdown styling */
@@ -1926,11 +2191,7 @@ button.item.dropdown-item-active i {
 
 /* Dropdown menus */
 .dropdown {
-  background: hsl(var(--popover));
-  color: hsl(var(--popover-foreground));
-  border: 1px solid hsl(var(--border));
-  border-radius: 0.375rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  @apply bg-popover text-popover-foreground border border-border rounded-md shadow-sm;
 }
 
 .dropdown .item {
@@ -1939,30 +2200,23 @@ button.item.dropdown-item-active i {
 }
 
 .dropdown .item:hover {
-  background: hsl(var(--accent));
-  color: hsl(var(--accent-foreground));
+  @apply bg-accent text-accent-foreground;
 }
 
 .dropdown .item.active {
-  background: hsl(var(--accent));
-  color: hsl(var(--accent-foreground));
+  @apply bg-accent text-accent-foreground;
 }
 
 /* Code blocks */
 .editor-shell pre {
-  background: hsl(var(--muted));
-  color: hsl(var(--muted-foreground));
-  padding: 1rem;
-  border-radius: 0.375rem;
-  overflow-x: auto;
+  @apply bg-muted text-muted-foreground p-4 overflow-x-auto;
 }
 
 /* Links */
 .editor-shell a {
-  color: hsl(var(--primary));
-  text-decoration: underline;
+  @apply text-primary underline;
 }
 
 .editor-shell a:hover {
-  color: hsl(var(--primary) / 0.9);
+  @apply text-primary/90;
 }

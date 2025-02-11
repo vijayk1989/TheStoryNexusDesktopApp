@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  */
-import type {JSX} from 'react';
+import type { JSX } from 'react';
 
 import './index.css';
 
@@ -15,8 +15,8 @@ import {
   $isLinkNode,
   TOGGLE_LINK_COMMAND,
 } from '@lexical/link';
-import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
-import {$findMatchingParent, mergeRegister} from '@lexical/utils';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import { $findMatchingParent, mergeRegister } from '@lexical/utils';
 import {
   $getSelection,
   $isLineBreakNode,
@@ -31,13 +31,16 @@ import {
   LexicalEditor,
   SELECTION_CHANGE_COMMAND,
 } from 'lexical';
-import {Dispatch, useCallback, useEffect, useRef, useState} from 'react';
+import { Dispatch, useCallback, useEffect, useRef, useState } from 'react';
 import * as React from 'react';
-import {createPortal} from 'react-dom';
+import { createPortal } from 'react-dom';
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Pencil, Trash2, X, Check, Link as LinkIcon } from "lucide-react";
 
-import {getSelectedNode} from '../../utils/getSelectedNode';
-import {setFloatingElemPositionForLinkEditor} from '../../utils/setFloatingElemPositionForLinkEditor';
-import {sanitizeUrl} from '../../utils/url';
+import { getSelectedNode } from '../../utils/getSelectedNode';
+import { setFloatingElemPositionForLinkEditor } from '../../utils/setFloatingElemPositionForLinkEditor';
+import { sanitizeUrl } from '../../utils/url';
 
 function preventDefault(
   event: React.KeyboardEvent<HTMLInputElement> | React.MouseEvent<HTMLElement>,
@@ -147,7 +150,7 @@ function FloatingLinkEditor({
 
   useEffect(() => {
     return mergeRegister(
-      editor.registerUpdateListener(({editorState}) => {
+      editor.registerUpdateListener(({ editorState }) => {
         editorState.read(() => {
           $updateLinkEditor();
         });
@@ -233,10 +236,10 @@ function FloatingLinkEditor({
   return (
     <div ref={editorRef} className="link-editor">
       {!isLink ? null : isLinkEditMode ? (
-        <>
-          <input
+        <div className="flex items-center gap-2 bg-background border border-border rounded-md p-2">
+          <Input
             ref={inputRef}
-            className="link-input"
+            className="h-8 min-w-[200px]"
             value={editedLinkUrl}
             onChange={(event) => {
               setEditedLinkUrl(event.target.value);
@@ -245,54 +248,66 @@ function FloatingLinkEditor({
               monitorInputInteraction(event);
             }}
           />
-          <div>
-            <div
-              className="link-cancel"
-              role="button"
-              tabIndex={0}
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
               onMouseDown={preventDefault}
               onClick={() => {
                 setIsLinkEditMode(false);
               }}
-            />
-
-            <div
-              className="link-confirm"
-              role="button"
-              tabIndex={0}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
               onMouseDown={preventDefault}
               onClick={handleLinkSubmission}
-            />
+            >
+              <Check className="h-4 w-4" />
+            </Button>
           </div>
-        </>
+        </div>
       ) : (
-        <div className="link-view">
+        <div className="flex items-center gap-2 bg-background border border-border rounded-md p-2">
+          <LinkIcon className="h-4 w-4 text-muted-foreground" />
           <a
             href={sanitizeUrl(linkUrl)}
             target="_blank"
-            rel="noopener noreferrer">
+            rel="noopener noreferrer"
+            className="text-sm text-foreground hover:text-primary truncate max-w-[200px]"
+          >
             {linkUrl}
           </a>
-          <div
-            className="link-edit"
-            role="button"
-            tabIndex={0}
-            onMouseDown={preventDefault}
-            onClick={(event) => {
-              event.preventDefault();
-              setEditedLinkUrl(linkUrl);
-              setIsLinkEditMode(true);
-            }}
-          />
-          <div
-            className="link-trash"
-            role="button"
-            tabIndex={0}
-            onMouseDown={preventDefault}
-            onClick={() => {
-              editor.dispatchCommand(TOGGLE_LINK_COMMAND, null);
-            }}
-          />
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onMouseDown={preventDefault}
+              onClick={(event) => {
+                event.preventDefault();
+                setEditedLinkUrl(linkUrl);
+                setIsLinkEditMode(true);
+              }}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onMouseDown={preventDefault}
+              onClick={() => {
+                editor.dispatchCommand(TOGGLE_LINK_COMMAND, null);
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       )}
     </div>
@@ -345,7 +360,7 @@ function useFloatingLinkEditorToolbar(
       }
     }
     return mergeRegister(
-      editor.registerUpdateListener(({editorState}) => {
+      editor.registerUpdateListener(({ editorState }) => {
         editorState.read(() => {
           $updateToolbar();
         });

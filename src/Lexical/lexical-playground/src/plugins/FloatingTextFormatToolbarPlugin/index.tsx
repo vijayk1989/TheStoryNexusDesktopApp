@@ -27,6 +27,8 @@ import {
 } from 'lexical';
 import { Dispatch, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Button } from "@/components/ui/button";
+import { Bold, Italic, Underline } from "lucide-react";
 
 import { getDOMRangeRect } from '../../utils/getDOMRangeRect';
 import { getSelectedNode } from '../../utils/getSelectedNode';
@@ -160,36 +162,39 @@ function TextFormatFloatingToolbar({
     <div ref={popupCharStylesEditorRef} className="floating-text-format-popup">
       {editor.isEditable() && (
         <>
-          <button
-            type="button"
+          <Button
+            variant={isBold ? "secondary" : "ghost"}
+            size="sm"
             onClick={() => {
               editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold');
             }}
-            className={'popup-item spaced ' + (isBold ? 'active' : '')}
             title="Bold"
-            aria-label="Format text as bold">
-            <i className="format bold" />
-          </button>
-          <button
-            type="button"
+            aria-label="Format text as bold"
+          >
+            <Bold className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={isItalic ? "secondary" : "ghost"}
+            size="sm"
             onClick={() => {
               editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic');
             }}
-            className={'popup-item spaced ' + (isItalic ? 'active' : '')}
             title="Italic"
-            aria-label="Format text as italics">
-            <i className="format italic" />
-          </button>
-          <button
-            type="button"
+            aria-label="Format text as italics"
+          >
+            <Italic className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={isUnderline ? "secondary" : "ghost"}
+            size="sm"
             onClick={() => {
               editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline');
             }}
-            className={'popup-item spaced ' + (isUnderline ? 'active' : '')}
             title="Underline"
-            aria-label="Format text to underlined">
-            <i className="format underline" />
-          </button>
+            aria-label="Format text to underlined"
+          >
+            <Underline className="h-4 w-4" />
+          </Button>
         </>
       )}
     </div>

@@ -7,34 +7,27 @@
  */
 
 .floating-text-format-popup {
-  display: flex;
-  background: #fff;
-  vertical-align: middle;
+  @apply flex gap-1 bg-background border border-border shadow-md rounded-md p-1;
   position: absolute;
   top: 0;
   left: 0;
   z-index: 10;
   opacity: 0;
-  box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.3);
-  border-radius: 5px;
-  transition: opacity 0.5s;
-  height: 35px;
   will-change: transform;
+  transition: opacity 0.5s;
+}
+
+.floating-text-format-popup.active {
+  opacity: 1;
 }
 
 .floating-text-format-popup button.popup-item {
+  @apply flex items-center bg-transparent text-foreground hover:bg-accent hover:text-accent-foreground rounded-md p-1.5 cursor-pointer;
   border: 0;
-  display: flex;
-  background: none;
-  border-radius: 10px;
-  padding: 5px;
-  cursor: pointer;
-  /* vertical-align: middle; */
-  align-items: center;
 }
 
 .floating-text-format-popup button.popup-item:disabled {
-  cursor: not-allowed;
+  @apply cursor-not-allowed opacity-50;
 }
 
 .floating-text-format-popup button.popup-item.spaced {
@@ -46,15 +39,15 @@
   height: 18px;
   width: 18px;
   display: flex;
-  opacity: 0.6;
+  opacity: 1;
 }
 
 .floating-text-format-popup button.popup-item:disabled i.format {
-  opacity: 0.2;
+  @apply opacity-50;
 }
 
 .floating-text-format-popup button.popup-item.active {
-  background-color: rgba(223, 232, 250, 0.3);
+  @apply bg-accent text-accent-foreground;
 }
 
 .floating-text-format-popup button.popup-item.active i {
