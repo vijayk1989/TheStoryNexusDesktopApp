@@ -71,3 +71,36 @@ export interface ChatMessage {
     content: string;
     timestamp: Date;
 }
+
+// Prompt related types
+export interface PromptMessage {
+    role: 'system' | 'user' | 'assistant';
+    content: string;
+}
+
+export interface Prompt extends BaseEntity {
+    name: string;
+    description?: string;
+    promptType: 'scene_beat' | 'gen_summary' | 'selection_specific' | 'continue_writing' | 'other';
+    messages: PromptMessage[];
+    allowedModels: string[];
+    storyId?: string; // Optional: for story-specific prompts
+}
+
+// AI Provider and Model types
+export type AIProvider = 'openai' | 'openrouter' | 'local';
+
+export interface AIModel {
+    id: string;
+    name: string;
+    provider: AIProvider;
+    contextLength: number;
+    enabled: boolean;
+}
+
+export interface AISettings extends BaseEntity {
+    openaiKey?: string;
+    openrouterKey?: string;
+    availableModels: AIModel[];
+    lastModelsFetch?: Date;
+}

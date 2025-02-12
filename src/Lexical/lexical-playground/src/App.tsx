@@ -21,24 +21,18 @@ import {
   TextNode,
 } from 'lexical';
 
-import { isDevPlayground } from './appSettings';
 import { FlashMessageContext } from './context/FlashMessageContext';
 import { SettingsContext, useSettings } from './context/SettingsContext';
 import { SharedHistoryContext } from './context/SharedHistoryContext';
 import { ToolbarContext } from './context/ToolbarContext';
 import Editor from './Editor';
-import logo from './images/logo.svg';
 import PlaygroundNodes from './nodes/PlaygroundNodes';
-import DocsPlugin from './plugins/DocsPlugin';
-import PasteLogPlugin from './plugins/PasteLogPlugin';
 import { TableContext } from './plugins/TablePlugin';
-import TestRecorderPlugin from './plugins/TestRecorderPlugin';
 import { parseAllowedFontSize } from './plugins/ToolbarPlugin/fontSize';
-import TypingPerfPlugin from './plugins/TypingPerfPlugin';
 import Settings from './Settings';
 import PlaygroundEditorTheme from './themes/PlaygroundEditorTheme';
 import { parseAllowedColor } from './ui/ColorPicker';
-import { LocalStoragePlugin } from './plugins/LocalStoragePlugin';
+
 
 function getExtraStyles(element: HTMLElement): string {
   // Parse styles from pasted input, but only if they match exactly the

@@ -37,6 +37,7 @@ import { StickyNode } from './StickyNode';
 import { TweetNode } from './TweetNode';
 import { YouTubeNode } from './YouTubeNode';
 import { HelloWorldNode } from './HelloWorldNode';
+import { SceneBeatNode } from './SceneBeatNode';
 
 const PlaygroundNodes: Array<Klass<LexicalNode>> = [
   HeadingNode,
@@ -73,7 +74,8 @@ const PlaygroundNodes: Array<Klass<LexicalNode>> = [
   LayoutContainerNode,
   LayoutItemNode,
   SpecialTextNode,
-  HelloWorldNode
+  HelloWorldNode,
+  SceneBeatNode
 ];
 
 export default PlaygroundNodes;

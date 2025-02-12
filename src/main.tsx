@@ -5,10 +5,10 @@ import Home from "./features/stories/pages/Home.tsx";
 import About from "./routes/About.tsx";
 import Chapters from "./features/chapters/pages/Chapters.tsx";
 import ChapterEditorPage from "./features/chapters/pages/ChapterEditorPage.tsx";
-import Prompts from "./routes/dashboard/Prompts.tsx";
+import PromptsPage from "./features/prompts/pages/PromptsPage.tsx";
 import Chats from "./routes/dashboard/Chats.tsx";
 import DefaultSettings from "./routes/dashboard/DefaultSettings.tsx";
-import AISettings from "./routes/dashboard/AISettings.tsx";
+import AISettingsPage from "./features/ai/pages/AISettingsPage.tsx";
 import { ThemeProvider } from "./lib/theme-provider";
 import { MainLayout } from "./components/MainLayout.tsx";
 import "./index.css";
@@ -31,10 +31,10 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 							<Route path=":storyId" element={<Navigate to="chapters" replace />} />
 							<Route path=":storyId/chapters" element={<Chapters />} />
 							<Route path=":storyId/chapters/:chapterId" element={<ChapterEditorPage />} />
-							<Route path=":storyId/prompts" element={<Prompts />} />
+							<Route path=":storyId/prompts" element={<PromptsPage />} />
 							<Route path=":storyId/chats" element={<Chats />} />
 							<Route path=":storyId/settings" element={<DefaultSettings />} />
-							<Route path="ai-settings" element={<AISettings />} />
+							<Route path="ai-settings" element={<AISettingsPage />} />
 						</Route>
 					</Routes>
 					<ToastContainer />

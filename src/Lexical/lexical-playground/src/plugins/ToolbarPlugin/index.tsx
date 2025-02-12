@@ -80,6 +80,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { ChevronDown, MoreHorizontal, Bold, Italic, Underline, Link, AlignLeft, AlignCenter, AlignRight, AlignJustify, Heading1, Heading2, Heading3, List, ListOrdered, CheckSquare, Quote, Code, Minus, SeparatorHorizontal, Image, Bot, Type, Superscript, Subscript, Strikethrough, X } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { $createSceneBeatNode } from '../../nodes/SceneBeatNode';
 
 const rootTypeToRootName = {
   root: 'Root',
@@ -858,15 +859,15 @@ export default function ToolbarPlugin({
                     editor.update(() => {
                       const selection = $getSelection();
                       if (selection) {
-                        const helloNode = $createHelloWorldNode();
+                        const beatNode = $createSceneBeatNode();
                         const paragraphNode = $createParagraphNode();
-                        selection.insertNodes([helloNode, paragraphNode]);
+                        selection.insertNodes([beatNode, paragraphNode]);
                       }
                     });
                   }}>
                   <div className="flex items-center gap-2">
-                    <i className="icon bot" />
-                    <span className="text">AI Assistant</span>
+                    <Bot className="h-4 w-4" />
+                    <span className="text">Scene Beat</span>
                   </div>
                 </DropdownMenuItem>
               </DropdownMenuContent>

@@ -4,7 +4,9 @@ import {
     Chapter,
     WorldData,
     WorldDataEntry,
-    AIChat
+    AIChat,
+    Prompt,
+    AISettings
 } from '../types/story';
 
 export class StoryDatabase extends Dexie {
@@ -13,16 +15,20 @@ export class StoryDatabase extends Dexie {
     worldData!: Table<WorldData>;
     worldDataEntries!: Table<WorldDataEntry>;
     aiChats!: Table<AIChat>;
+    prompts!: Table<Prompt>;
+    aiSettings!: Table<AISettings>;
 
     constructor() {
         super('StoryDatabase');
 
-        this.version(1).stores({
+        this.version(2).stores({
             stories: 'id, title, createdAt, language',
             chapters: 'id, storyId, order, createdAt',
             worldData: 'id, storyId, createdAt',
             worldDataEntries: 'id, worldDataId, type, *tags',
-            aiChats: 'id, storyId, createdAt'
+            aiChats: 'id, storyId, createdAt',
+            prompts: 'id, name, promptType, storyId, createdAt',
+            aiSettings: 'id, lastModelsFetch'
         });
     }
 
