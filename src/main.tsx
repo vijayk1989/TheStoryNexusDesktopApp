@@ -6,8 +6,6 @@ import About from "./routes/About.tsx";
 import Chapters from "./features/chapters/pages/Chapters.tsx";
 import ChapterEditorPage from "./features/chapters/pages/ChapterEditorPage.tsx";
 import PromptsPage from "./features/prompts/pages/PromptsPage.tsx";
-import Chats from "./routes/dashboard/Chats.tsx";
-import DefaultSettings from "./routes/dashboard/DefaultSettings.tsx";
 import AISettingsPage from "./features/ai/pages/AISettingsPage.tsx";
 import { ThemeProvider } from "./lib/theme-provider";
 import { MainLayout } from "./components/MainLayout.tsx";
@@ -32,8 +30,6 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 							<Route path=":storyId/chapters" element={<Chapters />} />
 							<Route path=":storyId/chapters/:chapterId" element={<ChapterEditorPage />} />
 							<Route path=":storyId/prompts" element={<PromptsPage />} />
-							<Route path=":storyId/chats" element={<Chats />} />
-							<Route path=":storyId/settings" element={<DefaultSettings />} />
 							<Route path="ai-settings" element={<AISettingsPage />} />
 						</Route>
 					</Routes>

@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePromptStore } from '../store/promptStore';
-import { aiService } from '@/services/ai/AIService';
+import { useAIStore } from '@/features/ai/stores/useAIStore';
 import type { Prompt, PromptMessage, AIModel } from '@/types/story';
 import { Plus, ArrowUp, ArrowDown, Trash2, X } from 'lucide-react';
 import { toast } from 'react-toastify';
@@ -54,14 +54,23 @@ export function PromptForm({ prompt, onSave, onCancel }: PromptFormProps) {
     const [selectedModels, setSelectedModels] = useState<string[]>(prompt?.allowedModels || []);
     const { createPrompt, updatePrompt } = usePromptStore();
 
+    const {
+        initialize,
+        getAvailableModels,
+        isInitialized,
+        isLoading: isAILoading
+    } = useAIStore();
+
     useEffect(() => {
         loadAvailableModels();
     }, []);
 
     const loadAvailableModels = async () => {
         try {
-            await aiService.initialize();
-            const models = await aiService.getAvailableModels();
+            if (!isInitialized) {
+                await initialize();
+            }
+            const models = await getAvailableModels();
             setAvailableModels(models);
         } catch (error) {
             console.error('Error loading AI models:', error);

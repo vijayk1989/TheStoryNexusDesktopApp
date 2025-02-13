@@ -1,7 +1,4 @@
 import type {
-    DOMConversionMap,
-    DOMExportOutput,
-    EditorConfig,
     LexicalNode,
     NodeKey,
     SerializedLexicalNode,
@@ -16,12 +13,10 @@ import { Loader2 } from 'lucide-react';
 import { ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Trash2 } from 'lucide-react';
-import { Input } from "@/components/ui/input";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ChevronDown } from "lucide-react";
 import { usePromptStore } from '@/features/prompts/store/promptStore';
 import { AIModel, Prompt } from '@/types/story';
-import { aiService } from '@/services/ai/AIService';
+import { useAIStore } from '@/features/ai/stores/useAIStore';
 import {
     MenubarContent,
     MenubarItem,
@@ -53,6 +48,14 @@ function SceneBeatComponent({ nodeKey }: { nodeKey: NodeKey }): JSX.Element {
     const [streamComplete, setStreamComplete] = useState(false);
     const [streaming, setStreaming] = useState(false);
     const { prompts, fetchPrompts, isLoading, error } = usePromptStore();
+
+    // Replace aiService with useAIStore
+    const {
+        settings,
+        getAvailableModels,
+        generateWithLocalModel,
+        processStreamedResponse
+    } = useAIStore();
     const [availableModels, setAvailableModels] = useState<AIModel[]>([]);
 
     // Simplified model groups
@@ -98,15 +101,15 @@ function SceneBeatComponent({ nodeKey }: { nodeKey: NodeKey }): JSX.Element {
         });
     }, [fetchPrompts]);
 
-    // Fetch models on mount
+    // Update models fetch to use the store
     useEffect(() => {
-        aiService.getAvailableModels()
+        getAvailableModels()
             .then(models => setAvailableModels(models))
             .catch(error => {
                 console.error('Error fetching models:', error);
                 toast.error('Failed to load AI models');
             });
-    }, []);
+    }, [getAvailableModels]);
 
     // Filter only scene_beat prompts
     const sceneBeatPrompts = useMemo(() =>
@@ -145,6 +148,7 @@ function SceneBeatComponent({ nodeKey }: { nodeKey: NodeKey }): JSX.Element {
         });
     };
 
+    // Update handleGenerateWithPrompt to use the store
     const handleGenerateWithPrompt = async (prompt: Prompt, model: AIModel) => {
         if (!command.trim()) {
             toast.error('Please enter a scene beat description');
@@ -156,11 +160,10 @@ function SceneBeatComponent({ nodeKey }: { nodeKey: NodeKey }): JSX.Element {
         setStreamComplete(false);
 
         try {
-            // For now, only handle local model and just send the raw command
             if (model.provider === 'local') {
-                const response = await aiService.generateWithLocalModel(command);
+                const response = await generateWithLocalModel(command);
 
-                await aiService.processStreamedResponse(
+                await processStreamedResponse(
                     response,
                     (token) => {
                         setStreamedText(prev => prev + token);
@@ -413,4 +416,4 @@ export function $isSceneBeatNode(
     node: LexicalNode | null | undefined,
 ): node is SceneBeatNode {
     return node instanceof SceneBeatNode;
-} 
+}
