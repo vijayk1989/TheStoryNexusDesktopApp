@@ -104,3 +104,24 @@ export interface AISettings extends BaseEntity {
     availableModels: AIModel[];
     lastModelsFetch?: Date;
 }
+
+// Lorebook types
+export interface LorebookEntry extends BaseEntity {
+    storyId: string;
+    name: string;
+    description: string;
+    category: 'character' | 'location' | 'item' | 'event' | 'note';
+    // Tags are stored as an array of strings, can contain spaces and special characters
+    tags: string[];
+    metadata?: {
+        type?: string;
+        importance?: 'major' | 'minor' | 'background';
+        status?: 'active' | 'inactive' | 'historical';
+        relationships?: Array<{
+            targetId: string;
+            type: string;
+            description?: string;
+        }>;
+        customFields?: Record<string, unknown>;
+    };
+}

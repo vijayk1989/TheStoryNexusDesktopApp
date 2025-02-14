@@ -1,9 +1,9 @@
-import { WorldDataList } from "./WorldDataList";
 import { StoryOutline } from "./StoryOutline";
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import EmbeddedPlayground from "@/Lexical/lexical-playground/src/EmbeddedPlayground";
+import { MatchedTagEntries } from "@/features/chapters/components/MatchedTagEntries";
 
 export function StoryEditor() {
     const [worldDataOpen, setWorldDataOpen] = useState(true);
@@ -11,24 +11,17 @@ export function StoryEditor() {
 
     return (
         <div className="h-full flex">
-            {/* World Data Sidebar */}
+            {/* Left Sidebar */}
             <div className="relative">
-                <div
-                    className={`h-full border-r overflow-hidden transition-all duration-300 ${worldDataOpen ? "w-64" : "w-0"
-                        }`}
-                >
+                <div className={`h-full border-r overflow-hidden transition-all duration-300 ${worldDataOpen ? "w-64" : "w-0"}`}>
                     <div className="h-full w-64">
                         <div className="p-4 border-b flex justify-between items-center">
-                            <h2 className="font-semibold">World Data</h2>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setWorldDataOpen(false)}
-                            >
+                            <h2 className="font-semibold">Matched Tag Entries</h2>
+                            <Button variant="ghost" size="icon" onClick={() => setWorldDataOpen(false)}>
                                 <ChevronLeft className="h-4 w-4" />
                             </Button>
                         </div>
-                        <WorldDataList />
+                        <MatchedTagEntries />
                     </div>
                 </div>
                 {!worldDataOpen && (
@@ -83,4 +76,4 @@ export function StoryEditor() {
             </div>
         </div>
     );
-} 
+}

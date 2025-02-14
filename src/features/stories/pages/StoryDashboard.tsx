@@ -5,7 +5,8 @@ import {
     Bot,
     Sparkles,
     Sliders,
-    BookOpen
+    BookOpen,
+    Book
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -16,9 +17,8 @@ import { useLocation } from "react-router";
 
 export default function StoryDashboard() {
     const { storyId } = useParams();
-    const { currentStory, getStory } = useStoryStore();
+    const { getStory } = useStoryStore();
     const location = useLocation();
-
 
     useEffect(() => {
         if (storyId) {
@@ -27,15 +27,11 @@ export default function StoryDashboard() {
     }, [storyId, getStory]);
 
     const isActive = (path: string) => {
-        // Remove trailing slash for consistency
         const currentPath = location.pathname.replace(/\/$/, '');
         const targetPath = path.replace(/\/$/, '');
-
-        // For write path, check if we're in a chapter editor
         if (currentPath.includes('/write') && targetPath.includes('/chapters')) {
             return true;
         }
-
         return currentPath === targetPath;
     };
 
@@ -44,15 +40,14 @@ export default function StoryDashboard() {
             variant="ghost"
             size="icon"
             className={cn(
-                "h-9 w-9 relative group",
-                isActive(to) && "bg-accent"
+                "h-9 w-9 relative group hover:bg-accent hover:text-accent-foreground",
+                isActive(to) && "bg-accent text-accent-foreground"
             )}
             asChild
         >
             <Link to={to}>
                 {icon}
                 <span className="sr-only">{label}</span>
-                {/* Tooltip */}
                 <span className="absolute left-12 px-2 py-1 ml-1 text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 bg-popover text-popover-foreground rounded shadow-md transition-opacity">
                     {label}
                 </span>
@@ -62,20 +57,15 @@ export default function StoryDashboard() {
 
     return (
         <div className="h-screen flex bg-background">
-            {/* Thin Icon Navigation */}
-            <div className="w-12 border-r bg-muted/50 flex flex-col items-center py-4">
+            {/* Fixed Icon Navigation */}
+            <div className="w-12 border-r bg-muted/50 flex flex-col items-center py-4 fixed h-screen">
                 {/* Top Navigation Icons */}
                 <div className="flex-1 flex flex-col items-center space-y-4">
                     {storyId && (
                         <>
-                            {/* Chapters List */}
                             {navButton(<BookOpen className="h-5 w-5" />, `/dashboard/${storyId}/chapters`, "Chapters")}
-                            {/* Prompts */}
+                            {navButton(<Book className="h-5 w-5" />, `/dashboard/${storyId}/lorebook`, "Lorebook")}
                             {navButton(<Sparkles className="h-5 w-5" />, `/dashboard/${storyId}/prompts`, "Prompts")}
-                            {/* Chats */}
-                            {navButton(<Bot className="h-5 w-5" />, `/dashboard/${storyId}/chats`, "AI Chats")}
-                            {/* Default Settings */}
-                            {navButton(<Settings className="h-5 w-5" />, `/dashboard/${storyId}/settings`, "Story Settings")}
                         </>
                     )}
                 </div>
@@ -83,22 +73,14 @@ export default function StoryDashboard() {
                 {/* Bottom Navigation */}
                 <div className="flex flex-col items-center space-y-4 pb-4">
                     <ThemeToggle />
-                    {navButton(<Home className="h-5 w-5" />, "/", "Home")}
-                    {navButton(<Sliders className="h-5 w-5" />, "/dashboard/ai-settings", "AI Settings")}
+                    {navButton(<Home className="h-5 w-5" />, "/stories", "Stories")}
+                    {navButton(<Sliders className="h-5 w-5" />, "/ai-settings", "AI Settings")}
                 </div>
             </div>
 
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col">
-                {/* Header with Story Title */}
-                {currentStory && (
-                    <div className="h-12 border-b bg-muted/50 flex items-center px-4">
-                        <h1 className="text-lg font-semibold">{currentStory.title}</h1>
-                    </div>
-                )}
-                <div className="flex-1">
-                    <Outlet />
-                </div>
+            <div className="flex-1 ml-12">
+                <Outlet />
             </div>
         </div>
     );

@@ -11,14 +11,11 @@ export function LoadChapterContentPlugin(): null {
 
     // Debug logging
     useEffect(() => {
-        console.log('LoadChapterContent - Current Chapter ID:', currentChapterId);
-        console.log('LoadChapterContent - Current Chapter:', currentChapter);
-        console.log('LoadChapterContent - Has Loaded:', hasLoaded);
+        // For console logs
     }, [currentChapterId, currentChapter, hasLoaded]);
 
     useEffect(() => {
         if (currentChapterId) {
-            console.log('LoadChapterContent - Fetching chapter:', currentChapterId);
             getChapter(currentChapterId);
             setHasLoaded(false);
         }
@@ -26,22 +23,23 @@ export function LoadChapterContentPlugin(): null {
 
     useEffect(() => {
         if (!hasLoaded && currentChapter?.content && currentChapter.id === currentChapterId) {
-            console.log('LoadChapterContent - Attempting to load content for:', currentChapter.id);
-            try {
-                const parsedState = editor.parseEditorState(currentChapter.content);
-                editor.setEditorState(parsedState);
-                console.log('LoadChapterContent - Content loaded successfully');
-                setHasLoaded(true);
-            } catch (error) {
-                console.error('LoadChapterContent - Failed to load content:', error);
-            }
+
+            // Wrap the editor state update in a micro task
+            Promise.resolve().then(() => {
+                try {
+                    const parsedState = editor.parseEditorState(currentChapter.content);
+                    editor.setEditorState(parsedState);
+                    setHasLoaded(true);
+                } catch (error) {
+                    console.error('LoadChapterContent - Failed to load content:', error);
+                }
+            });
         }
     }, [editor, currentChapter, currentChapterId, hasLoaded]);
 
     // Reset hasLoaded when chapter changes
     useEffect(() => {
         if (currentChapterId) {
-            console.log('LoadChapterContent - Resetting hasLoaded for new chapter');
             setHasLoaded(false);
         }
     }, [currentChapterId]);

@@ -6,7 +6,8 @@ import {
     WorldDataEntry,
     AIChat,
     Prompt,
-    AISettings
+    AISettings,
+    LorebookEntry
 } from '../types/story';
 
 export class StoryDatabase extends Dexie {
@@ -17,18 +18,20 @@ export class StoryDatabase extends Dexie {
     aiChats!: Table<AIChat>;
     prompts!: Table<Prompt>;
     aiSettings!: Table<AISettings>;
+    lorebookEntries!: Table<LorebookEntry>;
 
     constructor() {
         super('StoryDatabase');
 
-        this.version(2).stores({
+        this.version(3).stores({
             stories: 'id, title, createdAt, language',
             chapters: 'id, storyId, order, createdAt',
             worldData: 'id, storyId, createdAt',
             worldDataEntries: 'id, worldDataId, type, *tags',
             aiChats: 'id, storyId, createdAt',
             prompts: 'id, name, promptType, storyId, createdAt',
-            aiSettings: 'id, lastModelsFetch'
+            aiSettings: 'id, lastModelsFetch',
+            lorebookEntries: 'id, storyId, name, category, *tags',
         });
     }
 
@@ -88,6 +91,28 @@ export class StoryDatabase extends Dexie {
                 entries: worldDataEntries
             } : null
         };
+    }
+
+    // Add helper method for lorebook entries
+    async getLorebookEntriesByStory(storyId: string) {
+        return await this.lorebookEntries
+            .where('storyId')
+            .equals(storyId)
+            .toArray();
+    }
+
+    async getLorebookEntriesByTag(storyId: string, tag: string) {
+        return await this.lorebookEntries
+            .where(['storyId', 'tags'])
+            .equals([storyId, tag])
+            .toArray();
+    }
+
+    async getLorebookEntriesByCategory(storyId: string, category: LorebookEntry['category']) {
+        return await this.lorebookEntries
+            .where(['storyId', 'category'])
+            .equals([storyId, category])
+            .toArray();
     }
 }
 

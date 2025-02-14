@@ -53,7 +53,7 @@ import ToolbarPlugin from './plugins/ToolbarPlugin';
 import ContentEditable from './ui/ContentEditable';
 import { LoadChapterContentPlugin } from './plugins/LoadChapterContent';
 import { SaveChapterContentPlugin } from './plugins/SaveChapterContent';
-
+import LorebookTagPlugin from './plugins/LorebookTagPlugin';
 
 const skipCollaborationInit =
   // @ts-expect-error
@@ -175,6 +175,7 @@ export default function Editor(): JSX.Element {
             <TabIndentationPlugin maxIndent={7} />
             <CollapsiblePlugin />
             <PageBreakPlugin />
+            <LorebookTagPlugin />
             <LayoutPlugin />
             {floatingAnchorElem && !isSmallWidthViewport && (
               <>

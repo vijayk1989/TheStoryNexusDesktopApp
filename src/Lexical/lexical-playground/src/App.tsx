@@ -113,8 +113,6 @@ function App(): JSX.Element {
     theme: PlaygroundEditorTheme,
   };
 
-  console.log('App - Initializing Lexical Editor');
-
   return (
     <LexicalComposer initialConfig={initialConfig}>
       <SharedHistoryContext>

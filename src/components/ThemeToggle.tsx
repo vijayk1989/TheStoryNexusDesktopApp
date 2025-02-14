@@ -10,15 +10,10 @@ export function ThemeToggle() {
         <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 editor-shell"
+            className="h-9 w-9 hover:bg-accent hover:text-accent-foreground"
             onClick={() => {
                 const newTheme = theme === "light" ? "dark" : "light";
                 setTheme(newTheme);
-                if (newTheme === "dark") {
-                    document.documentElement.classList.add("dark");
-                } else {
-                    document.documentElement.classList.remove("dark");
-                }
             }}
         >
             <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />

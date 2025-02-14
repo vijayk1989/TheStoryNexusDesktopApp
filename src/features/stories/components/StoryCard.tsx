@@ -27,7 +27,7 @@ export function StoryCard({ story, onEdit }: StoryCardProps) {
     };
 
     const handleCardClick = () => {
-        navigate(`/dashboard/${story.id}`);
+        navigate(`/dashboard/${story.id}/chapters`);
     };
 
     return (
