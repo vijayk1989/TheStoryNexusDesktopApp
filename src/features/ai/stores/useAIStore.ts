@@ -4,7 +4,8 @@ import {
     AIProvider,
     AISettings,
     PromptParserConfig,
-    PromptMessage
+    PromptMessage,
+    AllowedModel
 } from '@/types/story';
 import { aiService } from '@/services/ai/AIService';
 import { db } from '@/services/database';
@@ -32,7 +33,7 @@ interface AIState {
         onError: (error: Error) => void
     ) => Promise<void>;
 
-    generateWithPrompt: (config: PromptParserConfig) => Promise<Response>;
+    generateWithPrompt: (config: PromptParserConfig, selectedModel: AllowedModel) => Promise<Response>;
 }
 
 export const useAIStore = create<AIState>((set, get) => ({
@@ -92,7 +93,7 @@ export const useAIStore = create<AIState>((set, get) => ({
         await aiService.processStreamedResponse(response, onToken, onComplete, onError);
     },
 
-    generateWithPrompt: async (config: PromptParserConfig) => {
+    generateWithPrompt: async (config: PromptParserConfig, selectedModel: AllowedModel) => {
         if (!get().isInitialized) {
             await get().initialize();
         }
@@ -104,6 +105,15 @@ export const useAIStore = create<AIState>((set, get) => ({
             throw new Error(error || 'Failed to parse prompt');
         }
 
-        return get().generateWithLocalModel(messages);
+        switch (selectedModel.provider) {
+            case 'local':
+                return aiService.generateWithLocalModel(messages);
+            case 'openai':
+                return aiService.generateWithOpenAI(messages, selectedModel.id);
+            case 'openrouter':
+                return aiService.generateWithOpenRouter(messages, selectedModel.id);
+            default:
+                throw new Error(`Unsupported provider: ${selectedModel.provider}`);
+        }
     }
 }));

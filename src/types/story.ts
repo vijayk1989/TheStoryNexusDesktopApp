@@ -78,13 +78,19 @@ export interface PromptMessage {
     content: string;
 }
 
+export interface AllowedModel {
+    id: string;
+    provider: AIProvider;
+    name: string;
+}
+
 export interface Prompt extends BaseEntity {
     name: string;
     description?: string;
     promptType: 'scene_beat' | 'gen_summary' | 'selection_specific' | 'continue_writing' | 'other';
     messages: PromptMessage[];
-    allowedModels: string[];
-    storyId?: string; // Optional: for story-specific prompts
+    allowedModels: AllowedModel[];
+    storyId?: string;
 }
 
 // AI Provider and Model types

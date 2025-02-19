@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePromptStore } from '../store/promptStore';
 import { useAIStore } from '@/features/ai/stores/useAIStore';
-import type { Prompt, PromptMessage, AIModel } from '@/types/story';
+import type { Prompt, PromptMessage, AIModel, AllowedModel } from '@/types/story';
 import { Plus, ArrowUp, ArrowDown, Trash2, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Badge } from '@/components/ui/badge';
@@ -28,12 +28,6 @@ const MOST_USED_MODELS = [
     'gemini-pro'
 ];
 
-const LOCAL_MODELS = [
-    'local-model-1',
-    'local-model-2',
-    'local-model-3'
-];
-
 interface ModelsByProvider {
     [key: string]: AIModel[]
 }
@@ -51,7 +45,7 @@ export function PromptForm({ prompt, onSave, onCancel }: PromptFormProps) {
     );
     const [promptType, setPromptType] = useState<PromptType>(prompt?.promptType || 'scene_beat');
     const [availableModels, setAvailableModels] = useState<AIModel[]>([]);
-    const [selectedModels, setSelectedModels] = useState<string[]>(prompt?.allowedModels || []);
+    const [selectedModels, setSelectedModels] = useState<AllowedModel[]>(prompt?.allowedModels || []);
     const { createPrompt, updatePrompt } = usePromptStore();
 
     const {
@@ -119,13 +113,19 @@ export function PromptForm({ prompt, onSave, onCancel }: PromptFormProps) {
     }, [availableModels]);
 
     const handleModelSelect = (modelId: string) => {
-        if (!selectedModels.includes(modelId)) {
-            setSelectedModels([...selectedModels, modelId]);
+        const selectedModel = availableModels.find(m => m.id === modelId);
+        if (selectedModel && !selectedModels.some(m => m.id === modelId)) {
+            const allowedModel: AllowedModel = {
+                id: selectedModel.id,
+                provider: selectedModel.provider,
+                name: selectedModel.name
+            };
+            setSelectedModels([...selectedModels, allowedModel]);
         }
     };
 
     const removeModel = (modelId: string) => {
-        setSelectedModels(selectedModels.filter(id => id !== modelId));
+        setSelectedModels(selectedModels.filter(m => m.id !== modelId));
     };
 
     const getModelDisplayName = (modelId: string): string => {
@@ -306,16 +306,16 @@ export function PromptForm({ prompt, onSave, onCancel }: PromptFormProps) {
                 <h3 className="font-medium mb-4">Available Models</h3>
 
                 <div className="flex flex-wrap gap-2 mb-4">
-                    {selectedModels.map((modelId) => (
+                    {selectedModels.map((model) => (
                         <Badge
-                            key={modelId}
+                            key={model.id}
                             variant="secondary"
                             className="flex items-center gap-1 px-3 py-1"
                         >
-                            {getModelDisplayName(modelId)}
+                            {model.name}
                             <button
                                 type="button"
-                                onClick={() => removeModel(modelId)}
+                                onClick={() => removeModel(model.id)}
                                 className="ml-1 hover:text-destructive"
                             >
                                 <X className="h-3 w-3" />
@@ -338,7 +338,7 @@ export function PromptForm({ prompt, onSave, onCancel }: PromptFormProps) {
                                     <SelectItem
                                         key={model.id}
                                         value={model.id}
-                                        disabled={selectedModels.includes(model.id)}
+                                        disabled={selectedModels.some(m => m.id === model.id)}
                                     >
                                         {model.name}
                                     </SelectItem>

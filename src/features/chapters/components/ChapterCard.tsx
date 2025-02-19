@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "../../../components/ui/button";
-import { Pencil, Trash2, Wand2, PenLine, ChevronUp, ChevronDown, Loader2 } from "lucide-react";
+import { Pencil, Trash2, PenLine, ChevronUp, ChevronDown } from "lucide-react";
 import { useChapterStore } from "../stores/useChapterStore";
-import type { AIModel, Chapter, Prompt } from "../../../types/story";
-import { Link, useNavigate } from "react-router";
+import type { AllowedModel, Chapter, Prompt } from "../../../types/story";
+import { useNavigate } from "react-router";
 import { Textarea } from "../../../components/ui/textarea";
 import {
     AlertDialog,
@@ -39,13 +39,6 @@ import { useStoryContext } from '@/features/stories/context/StoryContext';
 import { useAIStore } from '@/features/ai/stores/useAIStore';
 import { usePromptStore } from '@/features/prompts/store/promptStore';
 import { PromptParserConfig } from '@/types/story';
-import {
-    Menubar,
-    MenubarContent,
-    MenubarItem,
-    MenubarMenu,
-    MenubarTrigger,
-} from "../../../components/ui/menubar";
 import { AIGenerateMenu } from "@/components/ui/ai-generate-menu";
 
 interface ChapterCardProps {
@@ -83,8 +76,6 @@ export function ChapterCard({ chapter, storyId }: ChapterCardProps) {
     const { generateWithPrompt, processStreamedResponse } = useAIStore();
     const { prompts, isLoading, error } = usePromptStore();
     const [isGenerating, setIsGenerating] = useState(false);
-    const getChapter = useChapterStore(state => state.getChapter);
-    const currentChapter = useChapterStore(state => state.currentChapter);
     const getChapterPlainText = useChapterStore(state => state.getChapterPlainText);
 
     useEffect(() => {
@@ -135,7 +126,7 @@ export function ChapterCard({ chapter, storyId }: ChapterCardProps) {
         }
     };
 
-    const handleGenerateSummary = async (prompt: Prompt) => {
+    const handleGenerateSummary = async (prompt: Prompt, model: AllowedModel) => {
         try {
             setIsGenerating(true);
             const plainTextContent = await getChapterPlainText(chapter.id);
@@ -149,7 +140,7 @@ export function ChapterCard({ chapter, storyId }: ChapterCardProps) {
                 }
             };
 
-            const response = await generateWithPrompt(config);
+            const response = await generateWithPrompt(config, model);
             let text = '';
 
             await new Promise<void>((resolve, reject) => {

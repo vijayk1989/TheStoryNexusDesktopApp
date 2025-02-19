@@ -9,29 +9,20 @@ import { $applyNodeReplacement, $createParagraphNode, $createTextNode, $getNodeB
 import { Suspense, useState, useMemo, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { Loader2 } from 'lucide-react';
 import { ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Trash2 } from 'lucide-react';
-import { ChevronDown } from "lucide-react";
 import { usePromptStore } from '@/features/prompts/store/promptStore';
 import { AIModel, Prompt, PromptParserConfig } from '@/types/story';
 import { useAIStore } from '@/features/ai/stores/useAIStore';
-import {
-    MenubarContent,
-    MenubarItem,
-    MenubarMenu,
-    MenubarSeparator,
-    MenubarTrigger,
-    MenubarSub,
-    MenubarSubContent,
-    MenubarSubTrigger,
-    Menubar
-} from "@/components/ui/menubar";
 import { toast } from "react-toastify";
 import { Textarea } from "@/components/ui/textarea";
 import { useStoryContext } from '@/features/stories/context/StoryContext';
 import { useLorebookStore } from '@/features/lorebook/stores/useLorebookStore';
+import { AIGenerateMenu } from '@/components/ui/ai-generate-menu';
+import { AllowedModel } from '@/types/story';
+import { debounce } from 'lodash';
+import { LorebookEntry } from '@/types/story';
 
 export type SerializedSceneBeatNode = Spread<
     {
@@ -51,46 +42,10 @@ function SceneBeatComponent({ nodeKey }: { nodeKey: NodeKey }): JSX.Element {
     const [streamComplete, setStreamComplete] = useState(false);
     const [streaming, setStreaming] = useState(false);
     const { prompts, fetchPrompts, isLoading, error } = usePromptStore();
-    const { generateWithPrompt, processStreamedResponse, getAvailableModels } = useAIStore();
-    const [availableModels, setAvailableModels] = useState<AIModel[]>([]);
-    const { matchedEntries } = useLorebookStore();
+    const { generateWithPrompt, processStreamedResponse } = useAIStore();
+    const { matchedEntries, tagMap, setMatchedEntries } = useLorebookStore();
+    const [localMatchedEntries, setLocalMatchedEntries] = useState<Map<string, LorebookEntry>>(new Map());
 
-    // Simplified model groups
-    const modelGroups = useMemo(() => {
-        const groups: { [key: string]: AIModel[] } = {
-            'Local': [],
-            'OpenAI': [],
-            'Anthropic': [],
-            'Other': []
-        };
-
-        // Add local model
-        groups['Local'].push({
-            id: 'local/llama-3.2-3b-instruct',
-            name: 'Llama 3.2 3B Instruct',
-            provider: 'local',
-            contextLength: 4096,
-            enabled: true
-        });
-
-        availableModels.forEach(model => {
-            if (model.provider === 'openai') {
-                groups['OpenAI'].push(model);
-            } else if (model.provider === 'openrouter') {
-                if (model.name.includes('Anthropic')) {
-                    groups['Anthropic'].push(model);
-                } else {
-                    groups['Other'].push(model);
-                }
-            }
-        });
-
-        return Object.fromEntries(
-            Object.entries(groups).filter(([_, models]) => models.length > 0)
-        );
-    }, [availableModels]);
-
-    // Fetch prompts on component mount
     useEffect(() => {
         fetchPrompts().catch(error => {
             toast.error('Failed to load prompts');
@@ -98,23 +53,6 @@ function SceneBeatComponent({ nodeKey }: { nodeKey: NodeKey }): JSX.Element {
         });
     }, [fetchPrompts]);
 
-    // Update models fetch to use the store
-    useEffect(() => {
-        getAvailableModels()
-            .then(models => setAvailableModels(models))
-            .catch(error => {
-                console.error('Error fetching models:', error);
-                toast.error('Failed to load AI models');
-            });
-    }, [getAvailableModels]);
-
-    // Filter only scene_beat prompts
-    const sceneBeatPrompts = useMemo(() =>
-        prompts.filter(p => p.promptType === 'scene_beat'),
-        [prompts]
-    );
-
-    // Initialize command from node state
     useEffect(() => {
         editor.getEditorState().read(() => {
             const node = $getNodeByKey(nodeKey);
@@ -136,6 +74,30 @@ function SceneBeatComponent({ nodeKey }: { nodeKey: NodeKey }): JSX.Element {
         });
     }, [editor, nodeKey, command]);
 
+    // Add debounced tag matching effect for the command textarea
+    useEffect(() => {
+        const matchTags = () => {
+            const matchedEntries = new Map<string, LorebookEntry>();
+
+            // Check each tag against the command text
+            Object.entries(tagMap).forEach(([tag, entry]) => {
+                if (command.toLowerCase().includes(tag.toLowerCase())) {
+                    matchedEntries.set(entry.id, entry);
+                }
+            });
+
+            setLocalMatchedEntries(matchedEntries);
+        };
+
+        // Debounce the matching to avoid excessive updates
+        const debouncedMatch = debounce(matchTags, 500);
+        debouncedMatch();
+
+        return () => {
+            debouncedMatch.cancel();
+        };
+    }, [command, tagMap]);
+
     const handleDelete = () => {
         editor.update(() => {
             const node = $getNodeByKey(nodeKey);
@@ -145,7 +107,7 @@ function SceneBeatComponent({ nodeKey }: { nodeKey: NodeKey }): JSX.Element {
         });
     };
 
-    const handleGenerateWithPrompt = async (prompt: Prompt, model: AIModel) => {
+    const handleGenerateWithPrompt = async (prompt: Prompt, model: AllowedModel) => {
         if (!command.trim()) {
             toast.error('Please enter a scene beat description');
             return;
@@ -186,34 +148,30 @@ function SceneBeatComponent({ nodeKey }: { nodeKey: NodeKey }): JSX.Element {
                 }
             });
 
-            if (model.provider === 'local') {
-                const config: PromptParserConfig = {
-                    promptId: prompt.id,
-                    storyId: currentStoryId,
-                    chapterId: currentChapterId,
-                    scenebeat: command.trim(),
-                    previousWords: previousText,
-                    matchedEntries: new Set(matchedEntries.values())
-                };
+            const config: PromptParserConfig = {
+                promptId: prompt.id,
+                storyId: currentStoryId,
+                chapterId: currentChapterId,
+                scenebeat: command.trim(),
+                previousWords: previousText,
+                matchedEntries: new Set(matchedEntries.values())
+            };
 
-                const response = await generateWithPrompt(config);
+            const response = await generateWithPrompt(config, model);
 
-                await processStreamedResponse(
-                    response,
-                    (token) => {
-                        setStreamedText(prev => prev + token);
-                    },
-                    () => {
-                        setStreamComplete(true);
-                    },
-                    (error) => {
-                        console.error('Error streaming response:', error);
-                        toast.error('Failed to generate text');
-                    }
-                );
-            } else {
-                toast.error('Only local models are supported at the moment');
-            }
+            await processStreamedResponse(
+                response,
+                (token) => {
+                    setStreamedText(prev => prev + token);
+                },
+                () => {
+                    setStreamComplete(true);
+                },
+                (error) => {
+                    console.error('Error streaming response:', error);
+                    toast.error('Failed to generate text');
+                }
+            );
         } catch (error) {
             console.error('Error generating text:', error);
             toast.error('Failed to generate text');
@@ -267,11 +225,28 @@ function SceneBeatComponent({ nodeKey }: { nodeKey: NodeKey }): JSX.Element {
             {/* Collapsible Content */}
             {!collapsed && (
                 <div className="space-y-4">
-                    <Textarea
-                        value={command}
-                        onChange={(e) => setCommand(e.target.value)}
-                        className="min-h-[100px] resize-none"
-                    />
+                    <div className="relative">
+                        <Textarea
+                            value={command}
+                            onChange={(e) => setCommand(e.target.value)}
+                            className="min-h-[100px] resize-none"
+                        />
+
+                        {/* Add matched entries display */}
+                        {localMatchedEntries.size > 0 && (
+                            <div className="mt-2 p-2 border border-border rounded-lg bg-muted/50">
+                                <div className="text-sm font-medium mb-1">Matched Tags:</div>
+                                <div className="space-y-1">
+                                    {Array.from(localMatchedEntries.values()).map((entry) => (
+                                        <div key={entry.id} className="text-sm flex items-center gap-2">
+                                            <span className="font-medium">{entry.name}:</span>
+                                            <span className="text-muted-foreground">{entry.tags.join(', ')}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
 
                     {streamedText && (
                         <div className="border-t border-border p-2">
@@ -280,81 +255,15 @@ function SceneBeatComponent({ nodeKey }: { nodeKey: NodeKey }): JSX.Element {
                     )}
 
                     <div className="flex justify-between items-center border-t border-border p-2">
-                        <Menubar>
-                            <MenubarMenu>
-                                <MenubarTrigger className="gap-2">
-                                    {streaming ? (
-                                        <>
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                            Generating...
-                                        </>
-                                    ) : (
-                                        <>
-                                            Generate Prose
-                                            <ChevronDown className="h-4 w-4" />
-                                        </>
-                                    )}
-                                </MenubarTrigger>
-                                <MenubarContent>
-                                    {isLoading ? (
-                                        <MenubarItem disabled>Loading prompts...</MenubarItem>
-                                    ) : error ? (
-                                        <MenubarItem disabled>Error loading prompts</MenubarItem>
-                                    ) : sceneBeatPrompts.length === 0 ? (
-                                        <MenubarItem disabled>No scene beat prompts available</MenubarItem>
-                                    ) : (
-                                        <>
-                                            {sceneBeatPrompts.map((prompt) => (
-                                                <MenubarSub key={prompt.id}>
-                                                    <MenubarSubTrigger>
-                                                        <div className="flex flex-col">
-                                                            <span>{prompt.name}</span>
-                                                            <span className="text-xs text-muted-foreground">
-                                                                {prompt.messages.length} messages
-                                                            </span>
-                                                        </div>
-                                                    </MenubarSubTrigger>
-                                                    <MenubarSubContent
-                                                        className="max-h-[300px] overflow-y-auto"
-                                                    >
-                                                        {Object.entries(modelGroups).map(([provider, models]) => {
-                                                            const allowedModels = models.filter(model =>
-                                                                prompt.allowedModels.includes(model.id)
-                                                            );
-                                                            if (allowedModels.length === 0) return null;
-
-                                                            return (
-                                                                <div key={provider}>
-                                                                    <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground bg-muted sticky top-0">
-                                                                        {provider}
-                                                                    </div>
-                                                                    {allowedModels.map((model) => (
-                                                                        <MenubarItem
-                                                                            key={model.id}
-                                                                            onClick={() => handleGenerateWithPrompt(prompt, model)}
-                                                                            disabled={streaming}
-                                                                        >
-                                                                            <div className="flex flex-col">
-                                                                                <span>{model.name}</span>
-                                                                                <span className="text-xs text-muted-foreground">
-                                                                                    {model.contextLength.toLocaleString()} tokens
-                                                                                </span>
-                                                                            </div>
-                                                                        </MenubarItem>
-                                                                    ))}
-                                                                </div>
-                                                            );
-                                                        })}
-                                                    </MenubarSubContent>
-                                                </MenubarSub>
-                                            ))}
-                                            <MenubarSeparator />
-                                            <MenubarItem>Configure Prompts...</MenubarItem>
-                                        </>
-                                    )}
-                                </MenubarContent>
-                            </MenubarMenu>
-                        </Menubar>
+                        <AIGenerateMenu
+                            isGenerating={streaming}
+                            isLoading={isLoading}
+                            error={error}
+                            prompts={prompts}
+                            promptType="scene_beat"
+                            buttonText="Generate Prose"
+                            onGenerate={handleGenerateWithPrompt}
+                        />
 
                         {streamComplete && (
                             <div className="flex gap-2">

@@ -1,10 +1,13 @@
 import { AIModel, AIProvider, AISettings, PromptMessage } from '@/types/story';
 import { db } from '../database';
+import OpenAI from 'openai';
 
 export class AIService {
     private static instance: AIService;
     private settings: AISettings | null = null;
     private readonly LOCAL_API_URL = 'http://localhost:1234/v1';
+    private openRouter: OpenAI | null = null;
+    private openAI: OpenAI | null = null;
 
     private constructor() { }
 
@@ -22,19 +25,63 @@ export class AIService {
     }
 
     private async createInitialSettings(): Promise<AISettings> {
+        const localModels = await this.fetchLocalModels();
         const settings: AISettings = {
             id: crypto.randomUUID(),
             createdAt: new Date(),
-            availableModels: [{
+            availableModels: localModels,
+        };
+        await db.aiSettings.add(settings);
+        return settings;
+    }
+
+    private async fetchLocalModels(): Promise<AIModel[]> {
+        try {
+            const response = await fetch(`${this.LOCAL_API_URL}/models`);
+            if (!response.ok) throw new Error('Failed to fetch local models');
+
+            const result = await response.json();
+            return result.data.map((model: { id: string, object: string, owned_by: string }) => ({
+                id: `local/${model.id}`,
+                name: model.id, // We could prettify this name if needed
+                provider: 'local' as AIProvider,
+                contextLength: 4096, // Default value since not provided by API
+                enabled: true
+            }));
+        } catch (error) {
+            console.warn('Failed to fetch local models:', error);
+            // Fallback to default model if fetch fails
+            return [{
                 id: 'local/llama-3.2-3b-instruct',
                 name: 'Llama 3.2 3B Instruct',
                 provider: 'local',
                 contextLength: 4096,
                 enabled: true
-            }],
-        };
-        await db.aiSettings.add(settings);
-        return settings;
+            }];
+        }
+    }
+
+    private initializeOpenRouter() {
+        if (!this.settings?.openrouterKey) return;
+
+        this.openRouter = new OpenAI({
+            baseURL: 'https://openrouter.ai/api/v1',
+            apiKey: this.settings.openrouterKey,
+            dangerouslyAllowBrowser: true,
+            defaultHeaders: {
+                'HTTP-Referer': 'http://localhost:5173',
+                'X-Title': 'Story Forge Desktop',
+            }
+        });
+    }
+
+    private initializeOpenAI() {
+        if (!this.settings?.openaiKey) return;
+
+        this.openAI = new OpenAI({
+            apiKey: this.settings.openaiKey,
+            dangerouslyAllowBrowser: true
+        });
     }
 
     async updateKey(provider: AIProvider, key: string) {
@@ -48,6 +95,13 @@ export class AIService {
         await db.aiSettings.update(this.settings.id, update);
         Object.assign(this.settings, update);
 
+        // Initialize clients if needed
+        if (provider === 'openrouter') {
+            this.initializeOpenRouter();
+        } else if (provider === 'openai') {
+            this.initializeOpenAI();
+        }
+
         // Fetch available models when key is updated
         await this.fetchAvailableModels(provider);
     }
@@ -58,10 +112,20 @@ export class AIService {
         try {
             let models: AIModel[] = [];
 
-            if (provider === 'openai' && this.settings.openaiKey) {
-                models = await this.fetchOpenAIModels();
-            } else if (provider === 'openrouter' && this.settings.openrouterKey) {
-                models = await this.fetchOpenRouterModels();
+            switch (provider) {
+                case 'local':
+                    models = await this.fetchLocalModels();
+                    break;
+                case 'openai':
+                    if (this.settings.openaiKey) {
+                        models = await this.fetchOpenAIModels();
+                    }
+                    break;
+                case 'openrouter':
+                    if (this.settings.openrouterKey) {
+                        models = await this.fetchOpenRouterModels();
+                    }
+                    break;
             }
 
             // Update only models from this provider, keep others
@@ -203,6 +267,111 @@ export class AIService {
             onError(error as Error);
         }
     }
+
+    async generateWithOpenAI(messages: PromptMessage[], modelId: string): Promise<Response> {
+        if (!this.settings?.openaiKey) {
+            throw new Error('OpenAI API key not configured');
+        }
+
+        if (!this.openAI) {
+            this.initializeOpenAI();
+        }
+
+        const stream = await this.openAI!.chat.completions.create({
+            model: modelId,
+            messages,
+            stream: true,
+            temperature: 0.7,
+            max_tokens: 2048,
+        });
+
+        // Convert the stream to a Response object to maintain compatibility
+        const encoder = new TextEncoder();
+        const readable = new ReadableStream({
+            async start(controller) {
+                for await (const chunk of stream) {
+                    const text = chunk.choices[0]?.delta?.content || '';
+                    if (text) {
+                        const data = {
+                            choices: [{
+                                delta: { content: text }
+                            }]
+                        };
+                        controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+                    }
+                }
+                controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+                controller.close();
+            }
+        });
+
+        return new Response(readable, {
+            headers: {
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+            }
+        });
+    }
+
+    async generateWithOpenRouter(messages: PromptMessage[], modelId: string): Promise<Response> {
+        if (!this.settings?.openrouterKey) {
+            throw new Error('OpenRouter API key not configured');
+        }
+
+        if (!this.openRouter) {
+            this.initializeOpenRouter();
+        }
+
+        const stream = await this.openRouter!.chat.completions.create({
+            model: modelId,
+            messages,
+            stream: true,
+            temperature: 0.7,
+            max_tokens: 2048,
+        });
+
+        // Convert the stream to a Response object to maintain compatibility
+        const encoder = new TextEncoder();
+        const readable = new ReadableStream({
+            async start(controller) {
+                for await (const chunk of stream) {
+                    const text = chunk.choices[0]?.delta?.content || '';
+                    if (text) {
+                        const data = {
+                            choices: [{
+                                delta: { content: text }
+                            }]
+                        };
+                        controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+                    }
+                }
+                controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+                controller.close();
+            }
+        });
+
+        return new Response(readable, {
+            headers: {
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+            }
+        });
+    }
+
+    // Add getter methods for settings
+    getOpenAIKey(): string | undefined {
+        return this.settings?.openaiKey;
+    }
+
+    getOpenRouterKey(): string | undefined {
+        return this.settings?.openrouterKey;
+    }
+
+    getSettings(): AISettings | null {
+        return this.settings;
+    }
 }
 
-export const aiService = AIService.getInstance(); 
+export const aiService = AIService.getInstance();
