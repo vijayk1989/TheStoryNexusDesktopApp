@@ -20,6 +20,7 @@ interface ChapterState {
     clearError: () => void;
     updateChapterSummary: (id: string, summary: string) => Promise<void>;
     updateChapterSummaryOptimistic: (id: string, summary: string) => Promise<void>;
+    getChapterPlainText: (id: string) => Promise<string>;
 }
 
 export const useChapterStore = create<ChapterState>((set, _get) => ({
@@ -222,6 +223,53 @@ export const useChapterStore = create<ChapterState>((set, _get) => ({
         } catch (error) {
             console.error('Failed to update summary:', error);
             throw error;
+        }
+    },
+
+    // New method to get chapter plain text
+    getChapterPlainText: async (id: string) => {
+        try {
+            const chapter = await db.chapters.get(id);
+            if (!chapter) {
+                console.error('getChapterPlainText - Chapter not found:', id);
+                return '';
+            }
+
+            console.log('getChapterPlainText - Processing chapter:', {
+                id,
+                contentLength: chapter.content.length
+            });
+
+            // Parse the Lexical state
+            const editorState = JSON.parse(chapter.content);
+            let plainText = '';
+
+            const processNode = (node: any) => {
+                if (node.type === 'text') {
+                    plainText += node.text;
+                } else if (node.children) {
+                    node.children.forEach(processNode);
+                }
+                if (node.type === 'paragraph') {
+                    plainText += '\n\n';
+                }
+            };
+
+            if (editorState.root?.children) {
+                editorState.root.children.forEach(processNode);
+            }
+
+            const finalText = plainText.trim();
+            console.log('getChapterPlainText - Extracted text:', {
+                id,
+                extractedLength: finalText.length,
+                preview: finalText.slice(0, 100) + '...'
+            });
+
+            return finalText;
+        } catch (error) {
+            console.error('getChapterPlainText - Failed to parse chapter content:', error);
+            return '';
         }
     },
 })); 

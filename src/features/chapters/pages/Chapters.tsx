@@ -4,6 +4,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ChapterCard } from "@/features/chapters/components/ChapterCard";
 import { useChapterStore } from "@/features/chapters/stores/useChapterStore";
+import { usePromptStore } from "@/features/prompts/store/promptStore";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
     Dialog,
@@ -37,15 +38,19 @@ export default function Chapters() {
     const { storyId } = useParams();
     const { setCurrentStoryId } = useStoryContext();
     const { chapters, loading, error, fetchChapters, createChapter } = useChapterStore();
+    const { fetchPrompts } = usePromptStore();
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const form = useForm<CreateChapterForm>();
 
     useEffect(() => {
         if (storyId) {
             setCurrentStoryId(storyId);
-            fetchChapters(storyId);
+            Promise.all([
+                fetchChapters(storyId),
+                fetchPrompts()
+            ]).catch(console.error);
         }
-    }, [storyId, fetchChapters, setCurrentStoryId]);
+    }, [storyId, fetchChapters, setCurrentStoryId, fetchPrompts]);
 
     const handleCreateChapter = async (data: CreateChapterForm) => {
         if (!storyId) return;

@@ -1,4 +1,4 @@
-import { AIModel, AIProvider, AISettings } from '@/types/story';
+import { AIModel, AIProvider, AISettings, PromptMessage } from '@/types/story';
 import { db } from '../database';
 
 export class AIService {
@@ -25,7 +25,13 @@ export class AIService {
         const settings: AISettings = {
             id: crypto.randomUUID(),
             createdAt: new Date(),
-            availableModels: [],
+            availableModels: [{
+                id: 'local/llama-3.2-3b-instruct',
+                name: 'Llama 3.2 3B Instruct',
+                provider: 'local',
+                contextLength: 4096,
+                enabled: true
+            }],
         };
         await db.aiSettings.add(settings);
         return settings;
@@ -118,24 +124,28 @@ export class AIService {
 
     async getAvailableModels(provider?: AIProvider): Promise<AIModel[]> {
         if (!this.settings) throw new Error('AIService not initialized');
+
+        // Ensure settings are up to date
+        const dbSettings = await db.aiSettings.get(this.settings.id);
+        if (dbSettings) {
+            this.settings = dbSettings;
+        }
+
         return provider
             ? this.settings.availableModels.filter(m => m.provider === provider)
             : this.settings.availableModels;
     }
 
-    async generateWithLocalModel(prompt: string, systemPrompt?: string): Promise<Response> {
+    async generateWithLocalModel(messages: PromptMessage[]): Promise<Response> {
         const response = await fetch(`${this.LOCAL_API_URL}/chat/completions`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                messages: [
-                    ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
-                    { role: 'user', content: prompt }
-                ],
-                stream: true, // Enable streaming
-                model: 'local/llama-3.2-3b-instruct', // This is just an identifier for us
+                messages,
+                stream: true,
+                model: 'local/llama-3.2-3b-instruct',
                 temperature: 0.7,
                 max_tokens: 2048,
             }),

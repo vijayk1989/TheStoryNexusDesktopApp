@@ -133,7 +133,14 @@ export const useLorebookStore = create<LorebookState>((set, get) => ({
 
     setEditorContent: (content: string) => set({ editorContent: content }),
 
-    setMatchedEntries: (entries) => set({ matchedEntries: entries }),
+    setMatchedEntries: (entries) => {
+        console.log('Setting matched entries:', {
+            entriesType: entries instanceof Map ? 'Map' : 'Other',
+            size: entries.size,
+            entries: Array.from(entries.entries())
+        });
+        set({ matchedEntries: entries });
+    },
 
     // New combined action
     updateEntryAndRebuildTags: async (id, data) => {

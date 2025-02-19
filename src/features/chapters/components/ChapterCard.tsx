@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "../../../components/ui/button";
-import { Pencil, Trash2, Wand2, PenLine, ChevronUp, ChevronDown } from "lucide-react";
+import { Pencil, Trash2, Wand2, PenLine, ChevronUp, ChevronDown, Loader2 } from "lucide-react";
 import { useChapterStore } from "../stores/useChapterStore";
-import type { Chapter } from "../../../types/story";
+import type { AIModel, Chapter, Prompt } from "../../../types/story";
 import { Link, useNavigate } from "react-router";
 import { Textarea } from "../../../components/ui/textarea";
 import {
@@ -36,6 +36,17 @@ import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader } from "../../../components/ui/card";
 import { Bounce, toast } from 'react-toastify';
 import { useStoryContext } from '@/features/stories/context/StoryContext';
+import { useAIStore } from '@/features/ai/stores/useAIStore';
+import { usePromptStore } from '@/features/prompts/store/promptStore';
+import { PromptParserConfig } from '@/types/story';
+import {
+    Menubar,
+    MenubarContent,
+    MenubarItem,
+    MenubarMenu,
+    MenubarTrigger,
+} from "../../../components/ui/menubar";
+import { AIGenerateMenu } from "@/components/ui/ai-generate-menu";
 
 interface ChapterCardProps {
     chapter: Chapter;
@@ -69,12 +80,12 @@ export function ChapterCard({ chapter, storyId }: ChapterCardProps) {
     });
     const { setCurrentChapterId } = useStoryContext();
     const navigate = useNavigate();
-
-    useEffect(() => {
-        if (summary !== chapter.summary) {
-            setSummary(chapter.summary || '');
-        }
-    }, [chapter.summary]);
+    const { generateWithPrompt, processStreamedResponse } = useAIStore();
+    const { prompts, isLoading, error } = usePromptStore();
+    const [isGenerating, setIsGenerating] = useState(false);
+    const getChapter = useChapterStore(state => state.getChapter);
+    const currentChapter = useChapterStore(state => state.currentChapter);
+    const getChapterPlainText = useChapterStore(state => state.getChapterPlainText);
 
     useEffect(() => {
         localStorage.setItem(expandedStateKey, JSON.stringify(isExpanded));
@@ -124,6 +135,45 @@ export function ChapterCard({ chapter, storyId }: ChapterCardProps) {
         }
     };
 
+    const handleGenerateSummary = async (prompt: Prompt) => {
+        try {
+            setIsGenerating(true);
+            const plainTextContent = await getChapterPlainText(chapter.id);
+
+            const config: PromptParserConfig = {
+                promptId: prompt.id,
+                storyId: storyId,
+                chapterId: chapter.id,
+                additionalContext: {
+                    plainTextContent
+                }
+            };
+
+            const response = await generateWithPrompt(config);
+            let text = '';
+
+            await new Promise<void>((resolve, reject) => {
+                processStreamedResponse(
+                    response,
+                    (token) => {
+                        text += token;
+                        setSummary(text);
+                    },
+                    resolve,
+                    reject
+                );
+            });
+
+            await updateChapterSummaryOptimistic(chapter.id, text);
+            toast.success('Summary generated successfully');
+        } catch (error) {
+            console.error('Failed to generate summary:', error);
+            toast.error('Failed to generate summary');
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
     const toggleExpanded = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
@@ -137,7 +187,7 @@ export function ChapterCard({ chapter, storyId }: ChapterCardProps) {
 
     const cardContent = useMemo(() => (
         <CardContent className="p-4">
-            <div className="space-y-4" onClick={e => e.stopPropagation()}>
+            <div className="space-y-4">
                 <div className="space-y-2">
                     <Label htmlFor={`summary-${chapter.id}`}>Chapter Summary</Label>
                     <Textarea
@@ -147,7 +197,7 @@ export function ChapterCard({ chapter, storyId }: ChapterCardProps) {
                         onChange={(e) => setSummary(e.target.value)}
                         className="min-h-[100px] resize-none"
                     />
-                    <div className="flex justify-end">
+                    <div className="flex justify-between items-center">
                         <Button
                             type="button"
                             variant="secondary"
@@ -156,20 +206,20 @@ export function ChapterCard({ chapter, storyId }: ChapterCardProps) {
                         >
                             Save Summary
                         </Button>
+                        <AIGenerateMenu
+                            isGenerating={isGenerating}
+                            isLoading={isLoading}
+                            error={error}
+                            prompts={prompts}
+                            promptType="gen_summary"
+                            buttonText="Generate Summary"
+                            onGenerate={handleGenerateSummary}
+                        />
                     </div>
-                </div>
-                <div className="flex items-center justify-between border-t pt-2">
-                    <span className="text-xs text-muted-foreground">
-                        {chapter.wordCount.toLocaleString()} words
-                    </span>
-                    <Button variant="outline" size="sm">
-                        <Wand2 className="h-4 w-4 mr-2" />
-                        Generate Summary
-                    </Button>
                 </div>
             </div>
         </CardContent>
-    ), [summary, chapter.id, chapter.wordCount]);
+    ), [summary, chapter.id, isGenerating, isLoading, error, prompts]);
 
     return (
         <>

@@ -42,10 +42,10 @@ export function PromptsManager() {
     };
 
     return (
-        <div className="flex flex-1 overflow-hidden relative mt-14 lg:mt-0">
-            {/* Left panel - Prompts List */}
+        <div className="flex h-full">
+            {/* Left panel - Fixed Sidebar */}
             <div className={cn(
-                "w-full md:w-[300px] border-r border-input bg-muted flex flex-col",
+                "fixed w-[300px] h-screen border-r border-input bg-muted flex flex-col",
                 showMobileForm ? "hidden md:flex" : "flex"
             )}>
                 <div className="p-4 border-b border-input">
@@ -66,24 +66,8 @@ export function PromptsManager() {
                 </div>
             </div>
 
-            {/* Right panel - Prompt Form/Editor */}
-            <div className={cn(
-                "absolute md:relative inset-0 md:inset-auto flex-1 bg-background transition-transform duration-300",
-                showMobileForm ? "translate-x-0" : "translate-x-full md:translate-x-0",
-                (isCreating || selectedPrompt) ? "block" : "hidden md:block"
-            )}>
-                {/* Mobile back button */}
-                <div className="md:hidden p-4 border-b border-input">
-                    <Button
-                        variant="ghost"
-                        onClick={handleBack}
-                        className="flex items-center gap-2"
-                    >
-                        <ArrowLeft className="h-4 w-4" />
-                        Back to Prompts
-                    </Button>
-                </div>
-
+            {/* Right panel - Content Area */}
+            <div className="flex-1 pl-[300px] h-screen">
                 <div className="max-w-3xl mx-auto p-6">
                     {(isCreating || selectedPrompt) ? (
                         <PromptForm
@@ -96,7 +80,7 @@ export function PromptsManager() {
                             }}
                         />
                     ) : (
-                        <div className="flex flex-col items-center justify-center h-[400px] text-muted-foreground">
+                        <div className="flex items-center justify-center h-full text-muted-foreground">
                             <p>Select a prompt to edit or create a new one</p>
                         </div>
                     )}

@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 import { Trash2 } from 'lucide-react';
 import { ChevronDown } from "lucide-react";
 import { usePromptStore } from '@/features/prompts/store/promptStore';
-import { AIModel, Prompt } from '@/types/story';
+import { AIModel, Prompt, PromptParserConfig } from '@/types/story';
 import { useAIStore } from '@/features/ai/stores/useAIStore';
 import {
     MenubarContent,
@@ -30,6 +30,8 @@ import {
 } from "@/components/ui/menubar";
 import { toast } from "react-toastify";
 import { Textarea } from "@/components/ui/textarea";
+import { useStoryContext } from '@/features/stories/context/StoryContext';
+import { useLorebookStore } from '@/features/lorebook/stores/useLorebookStore';
 
 export type SerializedSceneBeatNode = Spread<
     {
@@ -42,21 +44,16 @@ export type SerializedSceneBeatNode = Spread<
 
 function SceneBeatComponent({ nodeKey }: { nodeKey: NodeKey }): JSX.Element {
     const [editor] = useLexicalComposerContext();
+    const { currentStoryId, currentChapterId } = useStoryContext();
     const [collapsed, setCollapsed] = useState(false);
     const [command, setCommand] = useState('');
     const [streamedText, setStreamedText] = useState('');
     const [streamComplete, setStreamComplete] = useState(false);
     const [streaming, setStreaming] = useState(false);
     const { prompts, fetchPrompts, isLoading, error } = usePromptStore();
-
-    // Replace aiService with useAIStore
-    const {
-        settings,
-        getAvailableModels,
-        generateWithLocalModel,
-        processStreamedResponse
-    } = useAIStore();
+    const { generateWithPrompt, processStreamedResponse, getAvailableModels } = useAIStore();
     const [availableModels, setAvailableModels] = useState<AIModel[]>([]);
+    const { matchedEntries } = useLorebookStore();
 
     // Simplified model groups
     const modelGroups = useMemo(() => {
@@ -148,10 +145,14 @@ function SceneBeatComponent({ nodeKey }: { nodeKey: NodeKey }): JSX.Element {
         });
     };
 
-    // Update handleGenerateWithPrompt to use the store
     const handleGenerateWithPrompt = async (prompt: Prompt, model: AIModel) => {
         if (!command.trim()) {
             toast.error('Please enter a scene beat description');
+            return;
+        }
+
+        if (!currentStoryId || !currentChapterId) {
+            toast.error('No story or chapter context found');
             return;
         }
 
@@ -160,8 +161,42 @@ function SceneBeatComponent({ nodeKey }: { nodeKey: NodeKey }): JSX.Element {
         setStreamComplete(false);
 
         try {
+            const editorState = editor.getEditorState();
+            let previousText = '';
+
+            editorState.read(() => {
+                const node = $getNodeByKey(nodeKey);
+                if (node) {
+                    const textNodes: string[] = [];
+                    let currentNode = node.getPreviousSibling();
+
+                    // Get all previous text nodes
+                    while (currentNode) {
+                        if ('getTextContent' in currentNode) {
+                            textNodes.unshift(currentNode.getTextContent());
+                        }
+                        currentNode = currentNode.getPreviousSibling();
+                    }
+
+                    previousText = textNodes.join('\n');
+                    console.log('Previous text collected from scene beat node:', {
+                        totalLength: previousText.length,
+                        preview: previousText,
+                    });
+                }
+            });
+
             if (model.provider === 'local') {
-                const response = await generateWithLocalModel(command);
+                const config: PromptParserConfig = {
+                    promptId: prompt.id,
+                    storyId: currentStoryId,
+                    chapterId: currentChapterId,
+                    scenebeat: command.trim(),
+                    previousWords: previousText,
+                    matchedEntries: new Set(matchedEntries.values())
+                };
+
+                const response = await generateWithPrompt(config);
 
                 await processStreamedResponse(
                     response,

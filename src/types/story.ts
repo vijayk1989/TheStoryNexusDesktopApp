@@ -125,3 +125,34 @@ export interface LorebookEntry extends BaseEntity {
         customFields?: Record<string, unknown>;
     };
 }
+
+// Prompt Parser types
+export interface PromptParserConfig {
+    storyId: string;
+    chapterId?: string;
+    promptId: string;
+    scenebeat?: string;
+    cursorPosition?: number;
+    previousWords?: string;
+    matchedEntries?: Set<LorebookEntry>;
+    additionalContext?: Record<string, any>;
+}
+
+export interface PromptContext {
+    storyId: string;
+    chapterId?: string;
+    scenebeat?: string;
+    cursorPosition?: number;
+    previousWords?: string;
+    matchedEntries?: Set<LorebookEntry>;
+    chapters?: Chapter[];
+    currentChapter?: Chapter;
+    additionalContext?: Record<string, any>;
+}
+
+export interface ParsedPrompt {
+    messages: PromptMessage[];
+    error?: string;
+}
+
+export type VariableResolver = (context: PromptContext, ...args: string[]) => Promise<string>;

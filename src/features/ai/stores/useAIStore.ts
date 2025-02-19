@@ -1,7 +1,14 @@
 import { create } from 'zustand';
-import { AIModel, AIProvider, AISettings } from '@/types/story';
+import {
+    AIModel,
+    AIProvider,
+    AISettings,
+    PromptParserConfig,
+    PromptMessage
+} from '@/types/story';
 import { aiService } from '@/services/ai/AIService';
 import { db } from '@/services/database';
+import { createPromptParser } from '@/features/prompts/services/promptParser';
 
 interface AIState {
     settings: AISettings | null;
@@ -17,13 +24,15 @@ interface AIState {
     updateProviderKey: (provider: AIProvider, key: string) => Promise<void>;
 
     // Generation methods
-    generateWithLocalModel: (prompt: string, systemPrompt?: string) => Promise<Response>;
+    generateWithLocalModel: (messages: PromptMessage[]) => Promise<Response>;
     processStreamedResponse: (
         response: Response,
         onToken: (text: string) => void,
         onComplete: () => void,
         onError: (error: Error) => void
     ) => Promise<void>;
+
+    generateWithPrompt: (config: PromptParserConfig) => Promise<Response>;
 }
 
 export const useAIStore = create<AIState>((set, get) => ({
@@ -72,14 +81,29 @@ export const useAIStore = create<AIState>((set, get) => ({
         }
     },
 
-    generateWithLocalModel: async (prompt: string, systemPrompt?: string) => {
+    generateWithLocalModel: async (messages: PromptMessage[]) => {
         if (!get().isInitialized) {
             await get().initialize();
         }
-        return aiService.generateWithLocalModel(prompt, systemPrompt);
+        return aiService.generateWithLocalModel(messages);
     },
 
     processStreamedResponse: async (response, onToken, onComplete, onError) => {
         await aiService.processStreamedResponse(response, onToken, onComplete, onError);
+    },
+
+    generateWithPrompt: async (config: PromptParserConfig) => {
+        if (!get().isInitialized) {
+            await get().initialize();
+        }
+
+        const promptParser = createPromptParser();
+        const { messages, error } = await promptParser.parse(config);
+
+        if (error || !messages.length) {
+            throw new Error(error || 'Failed to parse prompt');
+        }
+
+        return get().generateWithLocalModel(messages);
     }
-})); 
+}));

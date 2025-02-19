@@ -47,7 +47,7 @@ export function PromptsList({ onPromptSelect, selectedPromptId, onPromptDelete }
 
     if (error) {
         return (
-            <div className="p-4 text-destructive">
+            <div className="p-4 text-destructive h-full">
                 Error loading prompts: {error}
             </div>
         );
@@ -55,7 +55,7 @@ export function PromptsList({ onPromptSelect, selectedPromptId, onPromptDelete }
 
     if (isLoading) {
         return (
-            <div className="p-4 text-muted-foreground">
+            <div className="p-4 text-muted-foreground h-full">
                 Loading prompts...
             </div>
         );
@@ -63,14 +63,14 @@ export function PromptsList({ onPromptSelect, selectedPromptId, onPromptDelete }
 
     if (!prompts.length) {
         return (
-            <div className="p-4 text-muted-foreground">
+            <div className="p-4 text-muted-foreground h-full">
                 No prompts available
             </div>
         );
     }
 
     return (
-        <div className="divide-y divide-border">
+        <div className="divide-y divide-border h-full overflow-auto">
             {prompts.map((prompt) => (
                 <div
                     key={prompt.id}
