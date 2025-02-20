@@ -142,6 +142,8 @@ export interface PromptParserConfig {
     previousWords?: string;
     matchedEntries?: Set<LorebookEntry>;
     additionalContext?: Record<string, any>;
+    chapterMatchedEntries?: Set<LorebookEntry>;
+    sceneBeatMatchedEntries?: Set<LorebookEntry>;
 }
 
 export interface PromptContext {
@@ -154,6 +156,8 @@ export interface PromptContext {
     chapters?: Chapter[];
     currentChapter?: Chapter;
     additionalContext?: Record<string, any>;
+    chapterMatchedEntries?: Set<LorebookEntry>;
+    sceneBeatMatchedEntries?: Set<LorebookEntry>;
 }
 
 export interface ParsedPrompt {

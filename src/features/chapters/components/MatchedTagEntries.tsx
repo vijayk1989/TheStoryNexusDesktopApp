@@ -12,7 +12,7 @@ import { useStoryContext } from '@/features/stories/context/StoryContext';
 import { LorebookEntry } from '@/types/story';
 
 export function MatchedTagEntries() {
-    const { matchedEntries } = useLorebookStore();
+    const { chapterMatchedEntries } = useLorebookStore();
     const { currentStoryId } = useStoryContext();
     const [openStates, setOpenStates] = useState<Record<string, boolean>>({});
     const [editingEntry, setEditingEntry] = useState<LorebookEntry | null>(null);
@@ -21,13 +21,13 @@ export function MatchedTagEntries() {
     useEffect(() => {
         // Initialize all new entries as closed
         const newOpenStates: Record<string, boolean> = {};
-        Array.from(matchedEntries.values()).forEach(entry => {
+        Array.from(chapterMatchedEntries.values()).forEach(entry => {
             newOpenStates[entry.id] = false;
         });
         setOpenStates(newOpenStates);
-    }, [matchedEntries]);
+    }, [chapterMatchedEntries]);
 
-    if (matchedEntries.size === 0) return null;
+    if (chapterMatchedEntries.size === 0) return null;
     if (!currentStoryId) return null;
 
     const handleOpenChange = (id: string, isOpen: boolean) => {
@@ -52,7 +52,7 @@ export function MatchedTagEntries() {
     return (
         <div className="p-4 space-y-2">
             <h3 className="text-sm font-semibold">Matched Tag Entries</h3>
-            {Array.from(matchedEntries.values()).map((entry) => (
+            {Array.from(chapterMatchedEntries.values()).map((entry) => (
                 <Collapsible
                     key={entry.id}
                     open={openStates[entry.id]}

@@ -12,6 +12,8 @@ interface LorebookState {
     setEditorContent: (content: string) => void;
     matchedEntries: Map<string, LorebookEntry>;
     setMatchedEntries: (entries: Map<string, LorebookEntry>) => void;
+    chapterMatchedEntries: Map<string, LorebookEntry>;
+    setChapterMatchedEntries: (entries: Map<string, LorebookEntry>) => void;
 
     // Actions
     loadEntries: (storyId: string) => Promise<void>;
@@ -32,6 +34,7 @@ export const useLorebookStore = create<LorebookState>((set, get) => ({
     tagMap: {},
     editorContent: '',
     matchedEntries: new Map(),
+    chapterMatchedEntries: new Map(),
 
     buildTagMap: () => {
         const { entries } = get();
@@ -140,6 +143,15 @@ export const useLorebookStore = create<LorebookState>((set, get) => ({
             entries: Array.from(entries.entries())
         });
         set({ matchedEntries: entries });
+    },
+
+    setChapterMatchedEntries: (entries) => {
+        console.log('Setting chapter matched entries:', {
+            entriesType: entries instanceof Map ? 'Map' : 'Other',
+            size: entries.size,
+            entries: Array.from(entries.entries())
+        });
+        set({ chapterMatchedEntries: entries });
     },
 
     // New combined action

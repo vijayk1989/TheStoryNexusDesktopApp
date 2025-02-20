@@ -151,9 +151,31 @@ export class PromptParser {
     }
 
     private async resolveLorebookSceneBeatEntries(context: PromptContext): Promise<string> {
-        if (!context.scenebeat) return '';
-        // Implementation pending based on how scene beat tags are tracked
-        return '';
+        console.log('Resolving scene beat matched entries:', {
+            hasMatchedEntries: !!context.sceneBeatMatchedEntries,
+            entriesSize: context.sceneBeatMatchedEntries?.size,
+            entries: Array.from(context.sceneBeatMatchedEntries || []).map(e => ({
+                id: e.id,
+                name: e.name,
+                category: e.category,
+                importance: e.metadata?.importance
+            }))
+        });
+
+        if (!context.sceneBeatMatchedEntries || context.sceneBeatMatchedEntries.size === 0) {
+            console.log('No scene beat matched entries found');
+            return '';
+        }
+
+        const entries = Array.from(context.sceneBeatMatchedEntries);
+        entries.sort((a, b) => {
+            const importanceOrder = { 'major': 0, 'minor': 1, 'background': 2 };
+            const aImportance = a.metadata?.importance || 'background';
+            const bImportance = b.metadata?.importance || 'background';
+            return importanceOrder[aImportance] - importanceOrder[bImportance];
+        });
+
+        return this.formatLorebookEntries(entries);
     }
 
     private async resolveChapterSummaries(context: PromptContext): Promise<string> {
@@ -208,10 +230,10 @@ export class PromptParser {
     }
 
     private async resolveMatchedEntriesChapter(context: PromptContext): Promise<string> {
-        console.log('Resolving matched entries chapter:', {
-            hasMatchedEntries: !!context.matchedEntries,
-            entriesSize: context.matchedEntries?.size,
-            entries: Array.from(context.matchedEntries || []).map(e => ({
+        console.log('Resolving chapter matched entries:', {
+            hasMatchedEntries: !!context.chapterMatchedEntries,
+            entriesSize: context.chapterMatchedEntries?.size,
+            entries: Array.from(context.chapterMatchedEntries || []).map(e => ({
                 id: e.id,
                 name: e.name,
                 category: e.category,
@@ -219,13 +241,12 @@ export class PromptParser {
             }))
         });
 
-        if (!context.matchedEntries || context.matchedEntries.size === 0) {
-            console.log('No matched entries found');
+        if (!context.chapterMatchedEntries || context.chapterMatchedEntries.size === 0) {
+            console.log('No chapter matched entries found');
             return '';
         }
 
-        // Sort entries by importance
-        const entries = Array.from(context.matchedEntries);
+        const entries = Array.from(context.chapterMatchedEntries);
         entries.sort((a, b) => {
             const importanceOrder = { 'major': 0, 'minor': 1, 'background': 2 };
             const aImportance = a.metadata?.importance || 'background';
@@ -233,14 +254,7 @@ export class PromptParser {
             return importanceOrder[aImportance] - importanceOrder[bImportance];
         });
 
-        const formatted = this.formatLorebookEntries(entries);
-        console.log('Formatted entries:', {
-            entriesCount: entries.length,
-            formattedLength: formatted.length,
-            preview: formatted
-        });
-
-        return formatted;
+        return this.formatLorebookEntries(entries);
     }
 
     private formatLorebookEntries(entries: LorebookEntry[]): string {

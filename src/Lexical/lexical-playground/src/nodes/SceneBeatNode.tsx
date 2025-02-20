@@ -23,6 +23,8 @@ import { AIGenerateMenu } from '@/components/ui/ai-generate-menu';
 import { AllowedModel } from '@/types/story';
 import { debounce } from 'lodash';
 import { LorebookEntry } from '@/types/story';
+import { SceneBeatMatchedEntries } from './SceneBeatMatchedEntries';
+import { BookMarked } from 'lucide-react';
 
 export type SerializedSceneBeatNode = Spread<
     {
@@ -43,8 +45,10 @@ function SceneBeatComponent({ nodeKey }: { nodeKey: NodeKey }): JSX.Element {
     const [streaming, setStreaming] = useState(false);
     const { prompts, fetchPrompts, isLoading, error } = usePromptStore();
     const { generateWithPrompt, processStreamedResponse } = useAIStore();
-    const { matchedEntries, tagMap, setMatchedEntries } = useLorebookStore();
+    const { tagMap, chapterMatchedEntries } = useLorebookStore();
     const [localMatchedEntries, setLocalMatchedEntries] = useState<Map<string, LorebookEntry>>(new Map());
+    const [useChapterOrScenebeatMatchedEntries, setUseChapterOrScenebeatMatchedEntries] = useState<string>('chapter');
+    const [showMatchedEntries, setShowMatchedEntries] = useState(false);
 
     useEffect(() => {
         fetchPrompts().catch(error => {
@@ -79,7 +83,6 @@ function SceneBeatComponent({ nodeKey }: { nodeKey: NodeKey }): JSX.Element {
         const matchTags = () => {
             const matchedEntries = new Map<string, LorebookEntry>();
 
-            // Check each tag against the command text
             Object.entries(tagMap).forEach(([tag, entry]) => {
                 if (command.toLowerCase().includes(tag.toLowerCase())) {
                     matchedEntries.set(entry.id, entry);
@@ -89,7 +92,6 @@ function SceneBeatComponent({ nodeKey }: { nodeKey: NodeKey }): JSX.Element {
             setLocalMatchedEntries(matchedEntries);
         };
 
-        // Debounce the matching to avoid excessive updates
         const debouncedMatch = debounce(matchTags, 500);
         debouncedMatch();
 
@@ -148,13 +150,17 @@ function SceneBeatComponent({ nodeKey }: { nodeKey: NodeKey }): JSX.Element {
                 }
             });
 
+            const matchedEntries = useChapterOrScenebeatMatchedEntries === 'chapter' ? chapterMatchedEntries : localMatchedEntries;
+
             const config: PromptParserConfig = {
                 promptId: prompt.id,
                 storyId: currentStoryId,
                 chapterId: currentChapterId,
                 scenebeat: command.trim(),
                 previousWords: previousText,
-                matchedEntries: new Set(matchedEntries.values())
+                matchedEntries: new Set(matchedEntries.values()),
+                chapterMatchedEntries: new Set(chapterMatchedEntries.values()),
+                sceneBeatMatchedEntries: new Set(localMatchedEntries.values()),
             };
 
             const response = await generateWithPrompt(config, model);
@@ -202,24 +208,42 @@ function SceneBeatComponent({ nodeKey }: { nodeKey: NodeKey }): JSX.Element {
         <div className="relative my-4 rounded-lg border border-border bg-card">
             {/* Collapsible Header */}
             <div className="flex items-center justify-between p-2">
-                <div
-                    className="flex items-center gap-2 flex-1 cursor-pointer hover:bg-accent/50"
-                    onClick={() => setCollapsed(!collapsed)}
-                >
-                    <ChevronRight className={cn(
-                        "h-4 w-4 transition-transform",
-                        !collapsed && "rotate-90"
-                    )} />
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => setCollapsed(!collapsed)}
+                        className="flex items-center justify-center hover:bg-accent/50 rounded-md w-6 h-6"
+                    >
+                        <ChevronRight className={cn(
+                            "h-4 w-4 transition-transform",
+                            !collapsed && "rotate-90"
+                        )} />
+                    </button>
                     <span className="font-medium">Scene Beat</span>
                 </div>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleDelete}
-                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                >
-                    <Trash2 className="h-4 w-4" />
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowMatchedEntries(true)}
+                        className="h-8"
+                        disabled={localMatchedEntries.size === 0}
+                    >
+                        <span>Matched Entries</span>
+                        {localMatchedEntries.size > 0 && (
+                            <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                                {localMatchedEntries.size}
+                            </span>
+                        )}
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleDelete}
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                    >
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                </div>
             </div>
 
             {/* Collapsible Content */}
@@ -231,21 +255,6 @@ function SceneBeatComponent({ nodeKey }: { nodeKey: NodeKey }): JSX.Element {
                             onChange={(e) => setCommand(e.target.value)}
                             className="min-h-[100px] resize-none"
                         />
-
-                        {/* Add matched entries display */}
-                        {localMatchedEntries.size > 0 && (
-                            <div className="mt-2 p-2 border border-border rounded-lg bg-muted/50">
-                                <div className="text-sm font-medium mb-1">Matched Tags:</div>
-                                <div className="space-y-1">
-                                    {Array.from(localMatchedEntries.values()).map((entry) => (
-                                        <div key={entry.id} className="text-sm flex items-center gap-2">
-                                            <span className="font-medium">{entry.name}:</span>
-                                            <span className="text-muted-foreground">{entry.tags.join(', ')}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
                     </div>
 
                     {streamedText && (
@@ -286,6 +295,12 @@ function SceneBeatComponent({ nodeKey }: { nodeKey: NodeKey }): JSX.Element {
                     </div>
                 </div>
             )}
+
+            <SceneBeatMatchedEntries
+                open={showMatchedEntries}
+                onOpenChange={setShowMatchedEntries}
+                matchedEntries={new Set(localMatchedEntries.values())}
+            />
         </div>
     );
 }

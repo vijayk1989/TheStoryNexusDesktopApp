@@ -7,11 +7,11 @@ import { LorebookEntry } from '@/types/story';
 
 export default function LorebookTagPlugin(): null {
     const [editor] = useLexicalComposerContext();
-    const { tagMap, setMatchedEntries } = useLorebookStore();
+    const { tagMap, setChapterMatchedEntries } = useLorebookStore();
 
     useEffect(() => {
         // Clear matched entries when plugin mounts with new editor
-        setMatchedEntries(new Map());
+        setChapterMatchedEntries(new Map());
 
         const debouncedUpdate = debounce(() => {
             editor.getEditorState().read(() => {
@@ -27,7 +27,7 @@ export default function LorebookTagPlugin(): null {
                 });
 
                 // Update the store with matched entries only
-                setMatchedEntries(matchedEntries);
+                setChapterMatchedEntries(matchedEntries);
             });
         }, 500);
 
@@ -40,9 +40,9 @@ export default function LorebookTagPlugin(): null {
             removeListener();
             debouncedUpdate.cancel();
             // Clear matched entries when plugin unmounts
-            setMatchedEntries(new Map());
+            setChapterMatchedEntries(new Map());
         };
-    }, [editor, tagMap, setMatchedEntries]);
+    }, [editor, tagMap, setChapterMatchedEntries]);
 
     return null;
 } 
