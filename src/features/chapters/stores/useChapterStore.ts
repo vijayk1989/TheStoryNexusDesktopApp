@@ -21,6 +21,7 @@ interface ChapterState {
     updateChapterSummary: (id: string, summary: string) => Promise<void>;
     updateChapterSummaryOptimistic: (id: string, summary: string) => Promise<void>;
     getChapterPlainText: (id: string) => Promise<string>;
+    getChapterSummaries: (storyId: string, currentOrder: number, includeLatest?: boolean) => Promise<string>;
 }
 
 export const useChapterStore = create<ChapterState>((set, _get) => ({
@@ -269,6 +270,42 @@ export const useChapterStore = create<ChapterState>((set, _get) => ({
             return finalText;
         } catch (error) {
             console.error('getChapterPlainText - Failed to parse chapter content:', error);
+            return '';
+        }
+    },
+
+    // Enhanced summary gathering function with detailed formatting
+    getChapterSummaries: async (storyId: string, currentOrder: number, includeLatest: boolean = false) => {
+        try {
+            const chapters = await db.chapters
+                .where('storyId')
+                .equals(storyId)
+                .filter(chapter => includeLatest
+                    ? true  // Include all chapters
+                    : chapter.order < currentOrder) // Only include previous chapters
+                .sortBy('order');
+
+            const summaries = chapters
+                .map(chapter => {
+                    const summary = chapter.summary?.trim();
+                    return summary
+                        ? `Chapter ${chapter.order} - ${chapter.title}: ${summary}`
+                        : '';
+                })
+                .filter(Boolean)
+                .join(', ');
+
+            console.log('Generated chapter summaries:', {
+                storyId,
+                currentOrder,
+                includeLatest,
+                chapterCount: chapters.length,
+                summaryLength: summaries.length
+            });
+
+            return summaries;
+        } catch (error) {
+            console.error('Error getting chapter summaries:', error);
             return '';
         }
     },

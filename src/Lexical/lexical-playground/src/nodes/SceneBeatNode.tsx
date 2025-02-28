@@ -24,7 +24,6 @@ import { AllowedModel } from '@/types/story';
 import { debounce } from 'lodash';
 import { LorebookEntry } from '@/types/story';
 import { SceneBeatMatchedEntries } from './SceneBeatMatchedEntries';
-import { BookMarked } from 'lucide-react';
 
 export type SerializedSceneBeatNode = Spread<
     {

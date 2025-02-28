@@ -9,6 +9,7 @@ import {
     PromptContext,
     VariableResolver
 } from '@/types/story';
+import { useChapterStore } from '@/features/chapters/stores/useChapterStore';
 
 export class PromptParser {
     private readonly variableResolvers: Record<string, VariableResolver>;
@@ -180,11 +181,18 @@ export class PromptParser {
 
     private async resolveChapterSummaries(context: PromptContext): Promise<string> {
         if (!context.chapters) return '';
-        const summaries = context.chapters
-            .filter(ch => ch.summary && ch.order < (context.currentChapter?.order ?? Infinity))
-            .map(ch => `Chapter ${ch.order}: ${ch.summary}`)
-            .join('\n\n');
-        return summaries;
+
+        // Import the chapter store to use our new function
+        const { getChapterSummaries } = useChapterStore.getState();
+
+        // Use our new function to get properly formatted summaries
+        // If we have a current chapter, use its order, otherwise include all chapters
+        if (context.currentChapter) {
+            return await getChapterSummaries(context.storyId, context.currentChapter.order);
+        } else {
+            // If no current chapter, include all chapters
+            return await getChapterSummaries(context.storyId, Infinity, true);
+        }
     }
 
     private async resolvePreviousWords(context: PromptContext, count: string = '1000'): Promise<string> {
