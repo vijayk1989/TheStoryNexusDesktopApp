@@ -144,6 +144,8 @@ export interface PromptParserConfig {
     additionalContext?: Record<string, any>;
     chapterMatchedEntries?: Set<LorebookEntry>;
     sceneBeatMatchedEntries?: Set<LorebookEntry>;
+    povCharacter?: string;
+    povType?: 'First Person' | 'Third Person Limited' | 'Third Person Omniscient';
 }
 
 export interface PromptContext {
@@ -158,6 +160,8 @@ export interface PromptContext {
     additionalContext?: Record<string, any>;
     chapterMatchedEntries?: Set<LorebookEntry>;
     sceneBeatMatchedEntries?: Set<LorebookEntry>;
+    povCharacter?: string;
+    povType?: 'First Person' | 'Third Person Limited' | 'Third Person Omniscient';
 }
 
 export interface ParsedPrompt {

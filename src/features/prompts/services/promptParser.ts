@@ -76,7 +76,9 @@ export class PromptParser {
             ...config,
             chapters,
             currentChapter,
-            matchedEntries: config.matchedEntries
+            matchedEntries: config.matchedEntries,
+            povCharacter: config.povCharacter || currentChapter?.povCharacter,
+            povType: config.povType || currentChapter?.povType || 'Third Person Omniscient'
         };
     }
 
@@ -220,12 +222,24 @@ export class PromptParser {
     }
 
     private async resolvePoV(context: PromptContext): Promise<string> {
-        if (!context.currentChapter?.povType) return '';
-        const pov = `${context.currentChapter.povType}${context.currentChapter.povCharacter
-            ? ` (${context.currentChapter.povCharacter})`
-            : ''
-            }`;
-        return pov;
+        // First check if scene beat has specific POV settings
+        if (context.povType) {
+            const povCharacter = context.povType !== 'Third Person Omniscient' && context.povCharacter
+                ? ` (${context.povCharacter})`
+                : '';
+            return `${context.povType}${povCharacter}`;
+        }
+
+        // Fall back to chapter POV if available
+        if (context.currentChapter?.povType) {
+            const povCharacter = context.currentChapter.povType !== 'Third Person Omniscient' && context.currentChapter.povCharacter
+                ? ` (${context.currentChapter.povCharacter})`
+                : '';
+            return `${context.currentChapter.povType}${povCharacter}`;
+        }
+
+        // Default
+        return 'Third Person Omniscient';
     }
 
     private async resolveCharacter(name: string, context: PromptContext): Promise<string> {

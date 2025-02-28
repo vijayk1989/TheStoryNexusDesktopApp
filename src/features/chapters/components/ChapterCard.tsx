@@ -40,6 +40,7 @@ import { useAIStore } from '@/features/ai/stores/useAIStore';
 import { usePromptStore } from '@/features/prompts/store/promptStore';
 import { PromptParserConfig } from '@/types/story';
 import { AIGenerateMenu } from "@/components/ui/ai-generate-menu";
+import { useLorebookStore } from '@/features/lorebook/stores/useLorebookStore';
 
 interface ChapterCardProps {
     chapter: Chapter;
@@ -68,19 +69,31 @@ export function ChapterCard({ chapter, storyId }: ChapterCardProps) {
         defaultValues: {
             title: chapter.title,
             povCharacter: chapter.povCharacter,
-            povType: chapter.povType,
+            povType: chapter.povType || 'Third Person Omniscient',
         },
     });
+    const povType = form.watch('povType');
     const { setCurrentChapterId } = useStoryContext();
     const navigate = useNavigate();
     const { generateWithPrompt, processStreamedResponse } = useAIStore();
     const { prompts, isLoading, error } = usePromptStore();
     const [isGenerating, setIsGenerating] = useState(false);
     const getChapterPlainText = useChapterStore(state => state.getChapterPlainText);
+    const { entries } = useLorebookStore();
+    const characterEntries = useMemo(() => {
+        return entries.filter(entry => entry.category === 'character');
+    }, [entries]);
 
     useEffect(() => {
         localStorage.setItem(expandedStateKey, JSON.stringify(isExpanded));
     }, [isExpanded, expandedStateKey]);
+
+    // Reset POV character when switching to omniscient
+    useEffect(() => {
+        if (povType === 'Third Person Omniscient') {
+            form.setValue('povCharacter', undefined);
+        }
+    }, [povType, form]);
 
     const handleDelete = async () => {
         try {
@@ -95,7 +108,13 @@ export function ChapterCard({ chapter, storyId }: ChapterCardProps) {
 
     const handleEdit = async (data: EditChapterForm) => {
         try {
-            await updateChapter(chapter.id, data);
+            // Only include povCharacter if not omniscient
+            const povCharacter = data.povType !== 'Third Person Omniscient' ? data.povCharacter : undefined;
+
+            await updateChapter(chapter.id, {
+                ...data,
+                povCharacter
+            });
             setShowEditDialog(false);
             toast.success('Chapter updated successfully', {
                 position: "bottom-center",
@@ -224,6 +243,11 @@ export function ChapterCard({ chapter, storyId }: ChapterCardProps) {
                                     POV: {chapter.povCharacter} ({chapter.povType})
                                 </span>
                             )}
+                            {!chapter.povCharacter && chapter.povType && (
+                                <span className="text-xs text-muted-foreground">
+                                    POV: {chapter.povType}
+                                </span>
+                            )}
                         </div>
                         <div className="flex gap-2">
                             <Button variant="ghost" size="sm" onClick={() => setShowEditDialog(true)}>
@@ -288,20 +312,12 @@ export function ChapterCard({ chapter, storyId }: ChapterCardProps) {
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="povCharacter">POV Character</Label>
-                                <Input
-                                    id="povCharacter"
-                                    placeholder="Enter POV character name"
-                                    {...form.register("povCharacter")}
-                                />
-                            </div>
-                            <div className="grid gap-2">
                                 <Label htmlFor="povType">POV Type</Label>
                                 <Select
-                                    defaultValue={chapter.povType}
+                                    defaultValue={chapter.povType || 'Third Person Omniscient'}
                                     onValueChange={(value) => form.setValue("povType", value as any)}
                                 >
-                                    <SelectTrigger>
+                                    <SelectTrigger id="povType">
                                         <SelectValue placeholder="Select POV type" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -311,6 +327,32 @@ export function ChapterCard({ chapter, storyId }: ChapterCardProps) {
                                     </SelectContent>
                                 </Select>
                             </div>
+                            {povType && povType !== 'Third Person Omniscient' && (
+                                <div className="grid gap-2">
+                                    <Label htmlFor="povCharacter">POV Character</Label>
+                                    <Select
+                                        value={form.getValues("povCharacter")}
+                                        onValueChange={(value) => form.setValue("povCharacter", value)}
+                                    >
+                                        <SelectTrigger id="povCharacter">
+                                            <SelectValue placeholder="Select character" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {characterEntries.length === 0 ? (
+                                                <SelectItem value="" disabled>
+                                                    No characters available
+                                                </SelectItem>
+                                            ) : (
+                                                characterEntries.map((character) => (
+                                                    <SelectItem key={character.id} value={character.name}>
+                                                        {character.name}
+                                                    </SelectItem>
+                                                ))
+                                            )}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            )}
                         </div>
                         <DialogFooter>
                             <Button type="submit">Save Changes</Button>

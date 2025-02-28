@@ -27,6 +27,7 @@ import {
 import { useForm } from "react-hook-form";
 import { toast } from 'react-toastify';
 import { useStoryContext } from "@/features/stories/context/StoryContext";
+import { useLorebookStore } from "@/features/lorebook/stores/useLorebookStore";
 
 interface CreateChapterForm {
     title: string;
@@ -39,8 +40,16 @@ export default function Chapters() {
     const { setCurrentStoryId } = useStoryContext();
     const { chapters, loading, error, fetchChapters, createChapter } = useChapterStore();
     const { fetchPrompts } = usePromptStore();
+    const { entries } = useLorebookStore();
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-    const form = useForm<CreateChapterForm>();
+    const form = useForm<CreateChapterForm>({
+        defaultValues: {
+            povType: 'Third Person Omniscient'
+        }
+    });
+
+    const povType = form.watch('povType');
+    const characterEntries = entries.filter(entry => entry.category === 'character');
 
     useEffect(() => {
         if (storyId) {
@@ -52,6 +61,13 @@ export default function Chapters() {
         }
     }, [storyId, fetchChapters, setCurrentStoryId, fetchPrompts]);
 
+    // Reset POV character when switching to omniscient
+    useEffect(() => {
+        if (povType === 'Third Person Omniscient') {
+            form.setValue('povCharacter', undefined);
+        }
+    }, [povType, form]);
+
     const handleCreateChapter = async (data: CreateChapterForm) => {
         if (!storyId) return;
 
@@ -60,17 +76,24 @@ export default function Chapters() {
                 ? 1
                 : Math.max(...chapters.map(chapter => chapter.order ?? 0)) + 1;
 
+            // Only include povCharacter if not omniscient
+            const povCharacter = data.povType !== 'Third Person Omniscient' ? data.povCharacter : undefined;
+
             await createChapter({
                 storyId,
                 title: data.title,
                 content: '',
-                povCharacter: data.povCharacter,
+                povCharacter,
                 povType: data.povType,
                 order: nextOrder,
                 outline: { beats: [] }
             });
             setIsCreateDialogOpen(false);
-            form.reset();
+            form.reset({
+                title: '',
+                povType: 'Third Person Omniscient',
+                povCharacter: undefined
+            });
             toast.success('Chapter created successfully');
         } catch (error) {
             console.error('Failed to create chapter:', error);
@@ -125,17 +148,12 @@ export default function Chapters() {
                                     />
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="povCharacter">POV Character</Label>
-                                    <Input
-                                        id="povCharacter"
-                                        placeholder="Enter POV character name"
-                                        {...form.register("povCharacter")}
-                                    />
-                                </div>
-                                <div className="grid gap-2">
                                     <Label htmlFor="povType">POV Type</Label>
-                                    <Select onValueChange={(value) => form.setValue("povType", value as any)}>
-                                        <SelectTrigger>
+                                    <Select
+                                        defaultValue="Third Person Omniscient"
+                                        onValueChange={(value) => form.setValue("povType", value as any)}
+                                    >
+                                        <SelectTrigger id="povType">
                                             <SelectValue placeholder="Select POV type" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -145,6 +163,31 @@ export default function Chapters() {
                                         </SelectContent>
                                     </Select>
                                 </div>
+                                {povType && povType !== 'Third Person Omniscient' && (
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="povCharacter">POV Character</Label>
+                                        <Select
+                                            onValueChange={(value) => form.setValue("povCharacter", value)}
+                                        >
+                                            <SelectTrigger id="povCharacter">
+                                                <SelectValue placeholder="Select character" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {characterEntries.length === 0 ? (
+                                                    <SelectItem value="" disabled>
+                                                        No characters available
+                                                    </SelectItem>
+                                                ) : (
+                                                    characterEntries.map((character) => (
+                                                        <SelectItem key={character.id} value={character.name}>
+                                                            {character.name}
+                                                        </SelectItem>
+                                                    ))
+                                                )}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                )}
                             </div>
                             <DialogFooter>
                                 <Button type="submit">Create Chapter</Button>
