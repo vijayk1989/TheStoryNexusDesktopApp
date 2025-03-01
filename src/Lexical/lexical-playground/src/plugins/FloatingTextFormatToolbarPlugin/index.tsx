@@ -39,11 +39,12 @@ import { useAIStore } from '@/features/ai/stores/useAIStore';
 import { useStoryContext } from '@/features/stories/context/StoryContext';
 import { createPromptParser } from '@/features/prompts/services/promptParser';
 import { toast } from 'react-toastify';
-import { Prompt, AllowedModel, PromptParserConfig } from '@/types/story';
+import { Prompt, AllowedModel, PromptParserConfig, PromptMessage } from '@/types/story';
 import { PromptSelectMenu } from '@/components/ui/prompt-select-menu';
 import { Separator } from '@/components/ui/separator';
 import { useStoryStore } from '@/features/stories/stores/useStoryStore';
-
+import { PromptPreviewDialog } from '@/components/ui/prompt-preview-dialog';
+import { useChapterStore } from '@/features/chapters/stores/useChapterStore';
 function TextFormatFloatingToolbar({
   editor,
   anchorElem,
@@ -62,6 +63,7 @@ function TextFormatFloatingToolbar({
   const { prompts, fetchPrompts, isLoading, error } = usePromptStore();
   const { generateWithPrompt, processStreamedResponse } = useAIStore();
   const { currentStory } = useStoryStore();
+  const { currentChapter } = useChapterStore();
   const [selectedPrompt, setSelectedPrompt] = useState<Prompt>();
   const [selectedModel, setSelectedModel] = useState<AllowedModel>();
   const [isGenerating, setIsGenerating] = useState(false);
@@ -73,6 +75,12 @@ function TextFormatFloatingToolbar({
     focusOffset: number;
   } | null>(null);
   const [showGeneratedText, setShowGeneratedText] = useState(false);
+
+  // Add these states for prompt preview
+  const [showPreviewDialog, setShowPreviewDialog] = useState(false);
+  const [previewMessages, setPreviewMessages] = useState<PromptMessage[]>();
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
 
   // Fetch prompts when the component mounts
   useEffect(() => {
@@ -235,7 +243,9 @@ function TextFormatFloatingToolbar({
       additionalContext: {
         selectedText
       },
-      storyLanguage: currentStory?.language || 'English'
+      storyLanguage: currentStory?.language || 'English',
+      povType: currentChapter?.povType || 'Third Person Omniscient',
+      povCharacter: currentChapter?.povCharacter || '',
     };
   };
 
@@ -311,7 +321,6 @@ function TextFormatFloatingToolbar({
       }
     });
 
-    toast.success('Text applied successfully');
     resetGenerationState();
   };
 
@@ -324,6 +333,36 @@ function TextFormatFloatingToolbar({
     setStreamComplete(false);
     setOriginalSelection(null);
     setShowGeneratedText(false);
+  };
+
+  // Add this new function for previewing the prompt
+  const handlePreviewPrompt = async () => {
+    if (!selectedPrompt) {
+      toast.error('Please select a prompt first');
+      return;
+    }
+
+    setPreviewLoading(true);
+    setPreviewError(null);
+    setPreviewMessages(undefined);
+
+    try {
+      const promptParser = createPromptParser();
+      const config = createPromptConfig(selectedPrompt);
+      const result = await promptParser.parse(config);
+
+      if (result.error) {
+        setPreviewError(result.error);
+      } else {
+        setPreviewMessages(result.messages);
+      }
+    } catch (error) {
+      console.error('Error previewing prompt:', error);
+      setPreviewError(error instanceof Error ? error.message : 'Failed to preview prompt');
+    } finally {
+      setPreviewLoading(false);
+      setShowPreviewDialog(true);
+    }
   };
 
   return (
@@ -378,6 +417,18 @@ function TextFormatFloatingToolbar({
                   selectedModel={selectedModel}
                   onSelect={handlePromptSelect}
                 />
+
+                {/* Add Preview Prompt button */}
+                {selectedPrompt && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePreviewPrompt}
+                    className="flex items-center gap-1"
+                  >
+                    Preview
+                  </Button>
+                )}
 
                 <Button
                   variant="outline"
@@ -449,6 +500,15 @@ function TextFormatFloatingToolbar({
           </div>
         )}
       </div>
+
+      {/* Add the PromptPreviewDialog component */}
+      <PromptPreviewDialog
+        open={showPreviewDialog}
+        onOpenChange={setShowPreviewDialog}
+        messages={previewMessages}
+        isLoading={previewLoading}
+        error={previewError}
+      />
     </div>
   );
 }

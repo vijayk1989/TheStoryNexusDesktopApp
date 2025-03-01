@@ -14,8 +14,10 @@
   opacity: 0;
   will-change: transform;
   transition: opacity 0.5s;
-  max-width: 600px;
+  max-width: 700px;
+  min-width: 500px;
   width: auto;
+  font-size: 14px;
   @apply bg-background border border-border shadow-md rounded-md;
 }
 
@@ -24,7 +26,7 @@
 }
 
 .floating-text-format-popup .toolbar-container {
-  @apply flex flex-col;
+  @apply flex flex-col-reverse;
 }
 
 .floating-text-format-popup .toolbar-buttons {
@@ -137,9 +139,10 @@
 
 /* Generated text area styles */
 .floating-text-format-popup .generated-text-area {
-  @apply border-t border-border p-2 max-h-[150px] overflow-auto;
+  @apply border-b border-border p-2 max-h-[150px] overflow-auto;
   min-height: 60px;
   width: 100%;
+  font-size: 16px;
 }
 
 .floating-text-format-popup .generated-text-content {
@@ -158,4 +161,27 @@
   .floating-text-format-popup button.insert-comment {
     display: none;
   }
+}
+
+/* Add specific styling for the menubar component */
+.floating-text-format-popup .menubar {
+  @apply h-auto border-none shadow-none bg-transparent;
+}
+
+.floating-text-format-popup .menubar-trigger {
+  @apply font-medium;
+  font-size: 13px;
+}
+
+.floating-text-format-popup .menubar-content,
+.floating-text-format-popup .menubar-sub-content {
+  @apply border border-border shadow-md;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.floating-text-format-popup .menubar-item {
+  @apply text-sm font-medium;
+  letter-spacing: -0.01em;
 }
