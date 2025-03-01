@@ -2220,3 +2220,63 @@ button.item.dropdown-item-active i {
 .editor-shell a:hover {
   @apply text-primary/90;
 }
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/30 rounded-full;
+  border: 2px solid transparent;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/50;
+}
+
+/* Specific scrollbar styling for editor and outline panels */
+.editor-scroller::-webkit-scrollbar,
+.chapter-outline-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.editor-scroller::-webkit-scrollbar-thumb,
+.chapter-outline-container::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/20;
+}
+
+.editor-scroller::-webkit-scrollbar-thumb:hover,
+.chapter-outline-container::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/40;
+}
+
+/* Improve editor container styling */
+.editor-container {
+  @apply h-full overflow-hidden;
+}
+
+.editor-scroller {
+  @apply h-full overflow-auto;
+  min-height: unset !important; /* Override the default min-height */
+  max-height: 100%;
+}
+
+.editor {
+  min-height: unset !important; /* Override the default min-height */
+  height: auto !important;
+}
+
+/* Improve chapter outline container styling */
+.chapter-outline-container {
+  @apply h-full flex flex-col overflow-hidden;
+}
+
+.chapter-outline-content {
+  @apply flex-1 overflow-auto p-4;
+}

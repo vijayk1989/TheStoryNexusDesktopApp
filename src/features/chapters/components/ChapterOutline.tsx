@@ -35,22 +35,22 @@ export function ChapterOutline() {
     };
 
     return (
-        <div className="h-full flex flex-col">
-            <div className="p-4 flex-1 flex flex-col">
-                <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-medium">Chapter Outline</h3>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleSave}
-                        disabled={isSaving || !currentChapter}
-                    >
-                        <Save className="h-4 w-4 mr-1" />
-                        Save
-                    </Button>
-                </div>
+        <div className="chapter-outline-container">
+            <div className="p-4 border-b flex justify-between items-center">
+                <h2 className="font-semibold">Chapter Outline</h2>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSave}
+                    disabled={isSaving || !currentChapter}
+                >
+                    <Save className="h-4 w-4 mr-1" />
+                    Save
+                </Button>
+            </div>
+            <div className="chapter-outline-content">
                 <Textarea
-                    className="flex-1 resize-none"
+                    className="h-full min-h-[200px] resize-none"
                     placeholder="Enter your chapter outline here..."
                     value={outlineContent}
                     onChange={(e) => setOutlineContent(e.target.value)}
