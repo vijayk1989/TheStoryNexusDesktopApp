@@ -23,6 +23,9 @@ export class PromptParser {
             'previous_words': this.resolvePreviousWords.bind(this),
             'pov': this.resolvePoV.bind(this),
             'chapter_content': this.resolveChapterContent.bind(this),
+            'selected_text': this.resolveSelectedText.bind(this),
+            'selection': this.resolveSelectedText.bind(this),
+            'story_language': this.resolveStoryLanguage.bind(this),
         };
     }
 
@@ -308,6 +311,23 @@ ${metadata?.relationships?.length ? '\nRelationships:\n' +
 
         console.warn('No plain text content found for chapter:', context.currentChapter.id);
         return '';
+    }
+
+    private async resolveSelectedText(context: PromptContext): Promise<string> {
+        console.log('Resolving selected text:', {
+            hasSelectedText: !!context.additionalContext?.selectedText,
+            selectedTextLength: context.additionalContext?.selectedText?.length
+        });
+
+        if (!context.additionalContext?.selectedText) {
+            return '';
+        }
+
+        return context.additionalContext.selectedText;
+    }
+
+    private async resolveStoryLanguage(context: PromptContext): Promise<string> {
+        return context.storyLanguage || 'English';
     }
 }
 

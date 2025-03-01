@@ -28,12 +28,21 @@ import {
 import { Dispatch, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from "@/components/ui/button";
-import { Bold, Italic, Underline } from "lucide-react";
+import { Bold, Italic, Underline, Wand2, Loader2, Check, X } from "lucide-react";
 
 import { getDOMRangeRect } from '../../utils/getDOMRangeRect';
 import { getSelectedNode } from '../../utils/getSelectedNode';
 import { setFloatingElemPosition } from '../../utils/setFloatingElemPosition';
 import { INSERT_INLINE_COMMAND } from '../CommentPlugin';
+import { usePromptStore } from '@/features/prompts/store/promptStore';
+import { useAIStore } from '@/features/ai/stores/useAIStore';
+import { useStoryContext } from '@/features/stories/context/StoryContext';
+import { createPromptParser } from '@/features/prompts/services/promptParser';
+import { toast } from 'react-toastify';
+import { Prompt, AllowedModel, PromptParserConfig } from '@/types/story';
+import { PromptSelectMenu } from '@/components/ui/prompt-select-menu';
+import { Separator } from '@/components/ui/separator';
+import { useStoryStore } from '@/features/stories/stores/useStoryStore';
 
 function TextFormatFloatingToolbar({
   editor,
@@ -49,6 +58,29 @@ function TextFormatFloatingToolbar({
   isUnderline: boolean;
 }): JSX.Element {
   const popupCharStylesEditorRef = useRef<HTMLDivElement | null>(null);
+  const { currentStoryId, currentChapterId } = useStoryContext();
+  const { prompts, fetchPrompts, isLoading, error } = usePromptStore();
+  const { generateWithPrompt, processStreamedResponse } = useAIStore();
+  const { currentStory } = useStoryStore();
+  const [selectedPrompt, setSelectedPrompt] = useState<Prompt>();
+  const [selectedModel, setSelectedModel] = useState<AllowedModel>();
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedText, setGeneratedText] = useState('');
+  const [streamComplete, setStreamComplete] = useState(false);
+  const [originalSelection, setOriginalSelection] = useState<{
+    text: string;
+    anchorOffset: number;
+    focusOffset: number;
+  } | null>(null);
+  const [showGeneratedText, setShowGeneratedText] = useState(false);
+
+  // Fetch prompts when the component mounts
+  useEffect(() => {
+    fetchPrompts().catch(error => {
+      console.error('Error loading prompts:', error);
+    });
+  }, [fetchPrompts]);
+
   function mouseMoveListener(e: MouseEvent) {
     if (
       popupCharStylesEditorRef?.current &&
@@ -158,45 +190,265 @@ function TextFormatFloatingToolbar({
     );
   }, [editor, $updateTextFormatFloatingToolbar]);
 
+  const handlePromptSelect = (prompt: Prompt, model: AllowedModel) => {
+    setSelectedPrompt(prompt);
+    setSelectedModel(model);
+  };
+
+  const createPromptConfig = (prompt: Prompt): PromptParserConfig => {
+    if (!currentStoryId || !currentChapterId) {
+      throw new Error('No story or chapter context found');
+    }
+
+    let selectedText = '';
+    let previousWords = '';
+
+    editor.getEditorState().read(() => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection)) {
+        selectedText = selection.getTextContent();
+
+        // Get the DOM selection
+        const domSelection = window.getSelection();
+        if (domSelection && domSelection.rangeCount > 0) {
+          const range = domSelection.getRangeAt(0);
+
+          // Create a range from the start of the editor to the start of the selection
+          const editorElement = editor.getRootElement();
+          if (editorElement) {
+            const preSelectionRange = document.createRange();
+            preSelectionRange.selectNodeContents(editorElement);
+            preSelectionRange.setEnd(range.startContainer, range.startOffset);
+
+            // Get the text content of this range (all text before the selection)
+            previousWords = preSelectionRange.toString();
+          }
+        }
+      }
+    });
+
+    return {
+      promptId: prompt.id,
+      storyId: currentStoryId,
+      chapterId: currentChapterId,
+      previousWords: previousWords,
+      additionalContext: {
+        selectedText
+      },
+      storyLanguage: currentStory?.language || 'English'
+    };
+  };
+
+  const handleGenerateWithPrompt = async () => {
+    if (!selectedPrompt || !selectedModel) {
+      toast.error('Please select a prompt and model first');
+      return;
+    }
+
+    let selectedText = '';
+    let anchorOffset = 0;
+    let focusOffset = 0;
+
+    editor.getEditorState().read(() => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection)) {
+        selectedText = selection.getTextContent();
+        anchorOffset = selection.anchor.offset;
+        focusOffset = selection.focus.offset;
+      }
+    });
+
+    if (!selectedText) {
+      toast.error('No text selected');
+      return;
+    }
+
+    // Store the original selection for later use
+    setOriginalSelection({
+      text: selectedText,
+      anchorOffset,
+      focusOffset
+    });
+
+    setIsGenerating(true);
+    setGeneratedText('');
+    setStreamComplete(false);
+    setShowGeneratedText(true);
+
+    try {
+      const config = createPromptConfig(selectedPrompt);
+      const response = await generateWithPrompt(config, selectedModel);
+
+      await processStreamedResponse(
+        response,
+        (token) => {
+          setGeneratedText(prev => prev + token);
+        },
+        () => {
+          setStreamComplete(true);
+          setIsGenerating(false);
+        },
+        (error) => {
+          console.error('Error streaming response:', error);
+          toast.error('Failed to generate text');
+          setIsGenerating(false);
+        }
+      );
+    } catch (error) {
+      console.error('Error generating text:', error);
+      toast.error('Failed to generate text');
+      setIsGenerating(false);
+    }
+  };
+
+  const handleAccept = () => {
+    if (!generatedText) return;
+
+    editor.update(() => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection)) {
+        selection.insertText(generatedText);
+      }
+    });
+
+    toast.success('Text applied successfully');
+    resetGenerationState();
+  };
+
+  const handleReject = () => {
+    resetGenerationState();
+  };
+
+  const resetGenerationState = () => {
+    setGeneratedText('');
+    setStreamComplete(false);
+    setOriginalSelection(null);
+    setShowGeneratedText(false);
+  };
+
   return (
     <div ref={popupCharStylesEditorRef} className="floating-text-format-popup">
-      {editor.isEditable() && (
-        <>
-          <Button
-            variant={isBold ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => {
-              editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold');
-            }}
-            title="Bold"
-            aria-label="Format text as bold"
-          >
-            <Bold className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={isItalic ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => {
-              editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic');
-            }}
-            title="Italic"
-            aria-label="Format text as italics"
-          >
-            <Italic className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={isUnderline ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => {
-              editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline');
-            }}
-            title="Underline"
-            aria-label="Format text to underlined"
-          >
-            <Underline className="h-4 w-4" />
-          </Button>
-        </>
-      )}
+      <div className="toolbar-container">
+        {editor.isEditable() && (
+          <div className="toolbar-buttons">
+            <Button
+              variant={isBold ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => {
+                editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold');
+              }}
+              title="Bold"
+              aria-label="Format text as bold"
+            >
+              <Bold className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={isItalic ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => {
+                editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic');
+              }}
+              title="Italic"
+              aria-label="Format text as italics"
+            >
+              <Italic className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={isUnderline ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => {
+                editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline');
+              }}
+              title="Underline"
+              aria-label="Format text to underlined"
+            >
+              <Underline className="h-4 w-4" />
+            </Button>
+
+            <Separator orientation="vertical" className="mx-1 h-6" />
+
+            {!isGenerating && !streamComplete ? (
+              <>
+                <PromptSelectMenu
+                  isLoading={isLoading}
+                  error={error}
+                  prompts={prompts}
+                  promptType="selection_specific"
+                  selectedPrompt={selectedPrompt}
+                  selectedModel={selectedModel}
+                  onSelect={handlePromptSelect}
+                />
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleGenerateWithPrompt}
+                  disabled={isGenerating || !selectedPrompt || !selectedModel}
+                  className="flex items-center gap-1"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      <span>Generating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="h-3 w-3" />
+                      <span>Generate</span>
+                    </>
+                  )}
+                </Button>
+              </>
+            ) : (
+              <div className="flex items-center gap-2">
+                {isGenerating ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <span>Generating...</span>
+                  </div>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAccept}
+                      className="flex items-center gap-1"
+                    >
+                      <Check className="h-3 w-3" />
+                      <span>Accept</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleReject}
+                      className="flex items-center gap-1"
+                    >
+                      <X className="h-3 w-3" />
+                      <span>Reject</span>
+                    </Button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Generated text area */}
+        {showGeneratedText && (
+          <div className="generated-text-area">
+            <div className="generated-text-content">
+              {isGenerating && !generatedText ? (
+                <div className="generating-indicator">
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  <span>Generating...</span>
+                </div>
+              ) : (
+                <div className="generated-text">{generatedText}</div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
