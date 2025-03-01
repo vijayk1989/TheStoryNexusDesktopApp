@@ -1,5 +1,8 @@
 {
-  "name": "electron-react-tailwind",
+  "name": "the-story-nexus",
+  "displayName": "The Story Nexus",
+  "description": "A story writing app",
+  "author": "Vijaykumar",
   "private": true,
   "version": "0.0.0",
   "type": "module",

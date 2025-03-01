@@ -6,7 +6,7 @@
  *
  */
 
-import {SerializedDocument} from '@lexical/file';
+import { SerializedDocument } from '@lexical/file';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function* generateReader<T = any>(
@@ -15,7 +15,7 @@ async function* generateReader<T = any>(
   let done = false;
   while (!done) {
     const res = await reader.read();
-    const {value} = res;
+    const { value } = res;
     if (value !== undefined) {
       yield value;
     }
@@ -30,6 +30,7 @@ async function readBytestoString(
   const chunkSize = 0x8000;
   for await (const value of generateReader(reader)) {
     for (let i = 0; i < value.length; i += chunkSize) {
+      // @ts-ignore
       output.push(String.fromCharCode(...value.subarray(i, i + chunkSize)));
     }
   }
@@ -70,6 +71,7 @@ export async function docFromHash(
   for await (const chunk of generateReader(
     ds.readable.pipeThrough(new TextDecoderStream()).getReader(),
   )) {
+    // @ts-ignore
     output.push(chunk);
   }
   await closed;

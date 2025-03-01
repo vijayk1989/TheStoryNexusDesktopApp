@@ -37,7 +37,6 @@ export function ChapterOutline() {
     return (
         <div className="chapter-outline-container">
             <div className="p-4 border-b flex justify-between items-center">
-                <h2 className="font-semibold">Chapter Outline</h2>
                 <Button
                     variant="ghost"
                     size="sm"

@@ -52,7 +52,7 @@ export function StoryEditor() {
                 >
                     <div className="h-full w-64">
                         <div className="p-4 border-b flex justify-between items-center">
-                            <h2 className="font-semibold">Story Outline</h2>
+                            <h2 className="font-semibold">Chapter Outline</h2>
                             <Button
                                 variant="ghost"
                                 size="icon"

@@ -13,6 +13,7 @@ export default function normalizeClassNames(
   for (const className of classNames) {
     if (className && typeof className === 'string') {
       for (const [s] of className.matchAll(/\S+/g)) {
+        // @ts-ignore
         rval.push(s);
       }
     }

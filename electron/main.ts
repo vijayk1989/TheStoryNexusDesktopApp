@@ -38,6 +38,10 @@ function createWindow() {
 		},
 	});
 
+	console.log('__dirname:', __dirname);
+	console.log('APP_ROOT:', process.env.APP_ROOT);
+	console.log('RENDERER_DIST:', RENDERER_DIST);
+
 	// Test active push message to Renderer-process.
 	win.webContents.on("did-finish-load", () => {
 		win?.webContents.send("main-process-message", new Date().toLocaleString());

@@ -47,8 +47,8 @@ import {
   $isEquationNode,
   EquationNode,
 } from '../../nodes/EquationNode';
-import {$createImageNode, $isImageNode, ImageNode} from '../../nodes/ImageNode';
-import {$createTweetNode, $isTweetNode, TweetNode} from '../../nodes/TweetNode';
+import { $createImageNode, $isImageNode, ImageNode } from '../../nodes/ImageNode';
+import { $createTweetNode, $isTweetNode, TweetNode } from '../../nodes/TweetNode';
 import emojiList from '../../utils/emoji-list';
 
 export const HR: ElementTransformer = {
@@ -173,6 +173,7 @@ export const TABLE: ElementTransformer = {
         // It's TableCellNode so it's just to make flow happy
         if ($isTableCellNode(cell)) {
           rowOutput.push(
+            // @ts-ignore
             $convertToMarkdownString(PLAYGROUND_TRANSFORMERS, cell)
               .replace(/\n/g, '\\n')
               .trim(),

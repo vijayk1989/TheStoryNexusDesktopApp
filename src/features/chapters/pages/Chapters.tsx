@@ -86,7 +86,7 @@ export default function Chapters() {
                 povCharacter,
                 povType: data.povType,
                 order: nextOrder,
-                outline: { beats: [] }
+                outline: { content: '', lastUpdated: new Date() }
             });
             setIsCreateDialogOpen(false);
             form.reset({
