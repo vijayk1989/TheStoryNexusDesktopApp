@@ -26,12 +26,8 @@ export interface Chapter extends BaseEntity {
 }
 
 export interface ChapterOutline {
-    beats: Array<{
-        id: string;
-        description: string;
-        completed: boolean;
-        notes?: string;
-    }>;
+    content: string;
+    lastUpdated: Date;
 }
 
 // World building types

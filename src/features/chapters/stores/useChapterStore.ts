@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { db } from '../../../services/database';
-import type { Chapter } from '../../../types/story';
+import type { Chapter, ChapterOutline } from '../../../types/story';
 
 interface ChapterState {
     chapters: Chapter[];
@@ -22,6 +22,8 @@ interface ChapterState {
     updateChapterSummaryOptimistic: (id: string, summary: string) => Promise<void>;
     getChapterPlainText: (id: string) => Promise<string>;
     getChapterSummaries: (storyId: string, currentOrder: number, includeLatest?: boolean) => Promise<string>;
+    updateChapterOutline: (id: string, outline: ChapterOutline) => Promise<void>;
+    getChapterOutline: (id: string) => Promise<ChapterOutline | null>;
 }
 
 export const useChapterStore = create<ChapterState>((set, _get) => ({
@@ -307,6 +309,41 @@ export const useChapterStore = create<ChapterState>((set, _get) => ({
         } catch (error) {
             console.error('Error getting chapter summaries:', error);
             return '';
+        }
+    },
+
+    // Update chapter outline
+    updateChapterOutline: async (id: string, outline: ChapterOutline) => {
+        set({ loading: true, error: null });
+        try {
+            await db.chapters.update(id, { outline });
+            const updatedChapter = await db.chapters.get(id);
+            if (!updatedChapter) throw new Error('Chapter not found after update');
+
+            set(state => ({
+                chapters: state.chapters.map(chapter =>
+                    chapter.id === id ? updatedChapter : chapter
+                ),
+                currentChapter: state.currentChapter?.id === id ? updatedChapter : state.currentChapter,
+                loading: false
+            }));
+        } catch (error) {
+            set({
+                error: error instanceof Error ? error.message : 'Failed to update chapter outline',
+                loading: false
+            });
+            throw error;
+        }
+    },
+
+    // Get chapter outline
+    getChapterOutline: async (id: string) => {
+        try {
+            const chapter = await db.chapters.get(id);
+            return chapter?.outline || null;
+        } catch (error) {
+            console.error('Failed to get chapter outline:', error);
+            return null;
         }
     },
 })); 

@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import EmbeddedPlayground from "@/Lexical/lexical-playground/src/EmbeddedPlayground";
 import { MatchedTagEntries } from "@/features/chapters/components/MatchedTagEntries";
+import { ChapterOutline } from "./ChapterOutline";
 
 export function StoryEditor() {
     const [worldDataOpen, setWorldDataOpen] = useState(true);
@@ -60,7 +61,7 @@ export function StoryEditor() {
                                 <ChevronRight className="h-4 w-4" />
                             </Button>
                         </div>
-                        <StoryOutline />
+                        <ChapterOutline />
                     </div>
                 </div>
                 {!outlineOpen && (
